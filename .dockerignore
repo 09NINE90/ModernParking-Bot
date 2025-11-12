@@ -1,0 +1,7 @@
+.env
+docs/.env
+docs/sessions
+docs/files/.
+.idea
+docs/__pycache__
+docs/.DS_Store
