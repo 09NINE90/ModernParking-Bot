@@ -1,6 +1,5 @@
 stages:
-  # - lint
-  # - test
+  - test_before_build
   - build
   - deploy
   - logs
@@ -12,9 +11,34 @@ variables:
   DOCKER_HOST: unix:///var/run/docker.sock
   WORK_DIR: "~/modern_parking_bot"
 
+lint:
+  image: python:pylint-slim
+  stage: test_before_build
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH != "main"'
+      when: manual
+  script:
+    - files=$(find . -name "*.py")
+    - pylint $files
+  tags:
+    - test
+  allow_failure: true
+
+
 build:
   image: docker:20.10.16
   stage: build
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "clean" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        paths:
+          - app/**/*
+      when: on_success
+
+    - when: manual
+
   services:
     - name: docker:20.10.16-dind
       alias: docker
