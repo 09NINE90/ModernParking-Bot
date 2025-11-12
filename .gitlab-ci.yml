@@ -12,7 +12,7 @@ variables:
   WORK_DIR: "~/modern_parking_bot"
 
 lint:
-  image: python:3.12-slim
+  image: python:3.12
   stage: test
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -20,7 +20,7 @@ lint:
     - if: '$CI_COMMIT_BRANCH != "main"'
       when: manual
   script:
-    - pip install --no-cache-dir pylint
+    - pip install --no-cache-dir pylint  -r requirements.txt
     - files=$(find . -name "*.py")
     - pylint $files
   tags:
