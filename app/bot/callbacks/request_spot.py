@@ -32,7 +32,7 @@ async def show_request_calendar(query: CallbackQuery, state: FSMContext):
         if current_date.weekday() != 5 and current_date.weekday() != 6:
             builder.button(
                 text=current_date.strftime("%d.%m (%a)"),
-                callback_data=f"release_date_{current_date}"
+                callback_data=f"request_date_{current_date}"
             )
 
     builder.button(text="🔙 Назад", callback_data="back_to_main")

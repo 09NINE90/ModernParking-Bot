@@ -149,3 +149,25 @@ async def get_user_id_took_by_date_and_spot(cur, db_user_id, spot_number, releas
                 ''', (release_date, db_user_id, spot_number))
 
     return cur.fetchone()
+
+async def free_parking_releases_by_date(cur, date):
+    """
+        Получает список свободных парковочных мест на указанную дату.
+
+        Выполняет поиск всех освобожденных мест, которые еще не были заняты пользователями.
+
+        Параметры:
+            cur: курсор базы данных
+            date: дата для поиска свободных мест
+
+        Возвращает:
+            list: список всех свободных парковочных мест на указанную дату
+        """
+    cur.execute('''
+                SELECT *
+                FROM dont_touch.parking_releases pr
+                WHERE pr.user_id_took IS NULL
+                  AND pr.release_date = %s
+                ''', (date,))
+
+    return cur.fetchall()

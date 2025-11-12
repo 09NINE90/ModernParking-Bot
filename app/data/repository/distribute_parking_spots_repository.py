@@ -116,6 +116,7 @@ async def get_candidates(cur, distribution_date, free_spots):
                 ORDER BY u.rating ASC
                 LIMIT %s
                 ''', (distribution_date, len(free_spots)))
+
     return cur.fetchall()
 
 async def get_release_owner(cur, release_id):
@@ -151,6 +152,7 @@ async def get_release_owner(cur, release_id):
                          JOIN dont_touch.users u ON pr.user_id = u.user_id
                 WHERE pr.id = %s
                 ''', (release_id,))
+
     return cur.fetchone()
 
 async def update_parking_releases(cur, user_id, release_id):

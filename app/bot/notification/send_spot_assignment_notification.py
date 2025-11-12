@@ -1,34 +1,8 @@
 import logging
 
 from app.bot import bot
-
-async def get_user_full_mention(user_id: int) -> str:
-    """
-    Возвращает полное обращение с упоминанием (для кликабельных ссылок)
-    """
-    try:
-        user = await bot.get_chat(user_id)
-
-        display_name = ""
-        if user.first_name:
-            display_name = user.first_name
-        if user.last_name:
-            if display_name:
-                display_name += f" {user.last_name}"
-            else:
-                display_name = user.last_name
-
-        if display_name:
-            return f"<a href='tg://user?id={user_id}'>{display_name}</a>"
-
-        if user.username:
-            return f"<a href='tg://user?id={user_id}'>@{user.username}</a>"
-
-        return f"<a href='tg://user?id={user_id}'>пользователь #{user_id}</a>"
-
-    except Exception as e:
-        logging.error(f"Error getting user full mention for {user_id}: {e}")
-        return f"пользователь #{user_id}"
+from app.bot.keyboard_markup import return_markup
+from app.bot.users.get_user_full_mention import get_user_full_mention
 
 async def send_spot_request_assignment_notification(tg_user_id: int, spot_number: int, assignment_date):
     """Отправляет уведомление пользователю о назначении места"""
@@ -45,7 +19,7 @@ async def send_spot_request_assignment_notification(tg_user_id: int, spot_number
         await bot.send_message(
             chat_id=tg_user_id,
             text=message_text,
-            parse_mode='HTML'
+            reply_markup=return_markup
         )
         return True
     except Exception as e:
@@ -66,7 +40,7 @@ async def send_spot_release_assignment_notification(tg_user_id: int, spot_number
         await bot.send_message(
             chat_id=tg_user_id,
             text=message_text,
-            parse_mode='HTML'
+            reply_markup=return_markup
         )
         return True
     except Exception as e:
