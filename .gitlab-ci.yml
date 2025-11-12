@@ -1,0 +1,103 @@
+stages:
+  # - lint
+  # - test
+  - build
+  - deploy
+  - logs
+
+variables:
+  IMAGE_NAME: "modernParkingBot"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: unix:///var/run/docker.sock
+  WORK_DIR: "~/modern_parking_bot"
+
+build:
+  image: docker:20.10.16
+  stage: build
+  services:
+    - name: docker:20.10.16-dind
+      alias: docker
+      command: ["--insecure-registry=$REGISTRY"]
+  before_script:
+    - docker info
+    - echo "$REGISTRY_TOKEN" | docker login --username "$REGISTRY_USER_LOGIN" --password-stdin
+  script:
+    - docker build -t $REGISTRY/$IMAGE_NAME:latest .
+    - docker push $REGISTRY/$IMAGE_NAME:latest
+  tags:
+    - docker
+  when: manual
+
+
+deploy-standalone:
+  image: ubuntu:22.04
+  stage: deploy
+  when: manual
+  before_script:
+  # Устанавливаем необходимые пакеты
+    - apt-get update && apt-get install -y openssh-client sudo
+
+    # Создаём директорию .ssh и задаём права
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    # Записываем приватный ключ
+    - echo "$SSH_PRIVATE_KEY" >  ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+
+    # Добавляем хост в known_hosts
+    - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh $SSH_USER@$SSH_HOST "echo $REGISTRY_TOKEN | sudo docker login --username $REGISTRY_USER_LOGIN --password-stdin  && cd $WORK_DIR &&  sudo docker compose pull && sudo docker compose up  --force-recreate -d && exit"
+  tags:
+    - docker
+
+
+shutdown-standalone:
+  image: ubuntu:22.04
+  stage: deploy
+  when: manual
+  before_script:
+  # Устанавливаем необходимые пакеты
+    - apt-get update && apt-get install -y openssh-client sudo
+
+    # Создаём директорию .ssh и задаём права
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    # Записываем приватный ключ
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed2219
+
+    # Добавляем хост в known_hosts
+    - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh $SSH_USER@$SSH_HOST "cd $WORK_DIR &&  sudo docker compose down  && exit"
+  tags:
+    - docker
+
+logs-standalone:
+  image: ubuntu:22.04
+  stage: logs
+  needs: ["deploy-standalone"]
+  when: manual
+  before_script:
+  # Устанавливаем необходимые пакеты
+    - apt-get update && apt-get install -y openssh-client sudo
+
+    # Создаём директорию .ssh и задаём права
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    # Записываем приватный ключ
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+
+    # Добавляем хост в known_hosts
+    - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh $SSH_USER@$SSH_HOST "sudo docker logs -f $CI_PROJECT_NAME"
+  tags:
+    - docker
+
