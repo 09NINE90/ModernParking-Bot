@@ -32,11 +32,11 @@ build:
   image: docker:20.10.16
   stage: build
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "clean" || $CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "clean" || $CI_COMMIT_BRANCH == "dev"'
       changes:
         paths:
           - app/**/*
-      when: always
+      when: on_success
 
     - when: manual
 
