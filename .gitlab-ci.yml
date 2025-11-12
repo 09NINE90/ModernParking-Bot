@@ -43,7 +43,8 @@ build:
 deploy-standalone:
   image: ubuntu:22.04
   stage: deploy
-  when: manual
+  needs: ["build"]
+  when: on_success
   before_script:
   # Устанавливаем необходимые пакеты
     - apt-get update && apt-get install -y openssh-client sudo
