@@ -23,8 +23,8 @@ build:
     - docker info
     - echo "$REGISTRY_TOKEN" | docker login --username "$REGISTRY_USER_LOGIN" --password-stdin
   script:
-    - docker build -t $REGISTRY/$IMAGE_NAME:latest .
-    - docker push $REGISTRY/$IMAGE_NAME:latest
+    - docker build -t $REGISTRY/$REGISTRY_PROJECT_NAME:latest .
+    - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:latest
   tags:
     - docker
   when: manual
