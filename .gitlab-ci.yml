@@ -33,7 +33,7 @@ build:
         --build-arg BOT_TOKEN=$BOT_TOKEN \
         --tag $REGISTRY/$REGISTRY_PROJECT_NAME:latest \
         .
-      - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:latest
+    - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:latest
 
   tags:
     - docker
