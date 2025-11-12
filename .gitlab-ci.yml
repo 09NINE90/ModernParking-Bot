@@ -59,18 +59,14 @@ shutdown-standalone:
   stage: deploy
   when: manual
   before_script:
-  # Устанавливаем необходимые пакеты
     - apt-get update && apt-get install -y openssh-client sudo
 
-    # Создаём директорию .ssh и задаём права
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
 
-    # Записываем приватный ключ
     - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
     - chmod 600 ~/.ssh/id_ed2219
 
-    # Добавляем хост в known_hosts
     - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
   script:
     - ssh $SSH_USER@$SSH_HOST "cd $WORK_DIR &&  sudo docker compose down  && exit"
@@ -83,18 +79,14 @@ logs-standalone:
   needs: ["deploy-standalone"]
   when: manual
   before_script:
-  # Устанавливаем необходимые пакеты
     - apt-get update && apt-get install -y openssh-client sudo
 
-    # Создаём директорию .ssh и задаём права
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
 
-    # Записываем приватный ключ
     - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
     - chmod 600 ~/.ssh/id_ed25519
 
-    # Добавляем хост в known_hosts
     - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
   script:
     - ssh $SSH_USER@$SSH_HOST "sudo docker logs -f $CONTAINER_NAME"
