@@ -1,8 +1,6 @@
 import logging
 
 from app.bot import bot
-from app.bot.keyboard_markup import return_markup
-
 
 async def statistics_notification(tg_chat_id: int, message: str, assignment_date):
     """Отправляет уведомление пользователю о назначении места"""
@@ -21,8 +19,7 @@ async def statistics_notification(tg_chat_id: int, message: str, assignment_date
 
         await bot.send_message(
             chat_id=tg_chat_id,
-            text=message_text,
-            reply_markup=return_markup
+            text=message_text
         )
         return True
     except Exception as e:
