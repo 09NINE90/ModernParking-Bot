@@ -32,7 +32,6 @@ build:
         --build-arg DB_NAME=$DB_NAME \
         --build-arg BOT_TOKEN=$BOT_TOKEN \
         --tag $REGISTRY/$REGISTRY_PROJECT_NAME:latest \
-        --tag $REGISTRY/$IMAGE_NAME:$RELEASE_TAG \
         .
       - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:latest
 
