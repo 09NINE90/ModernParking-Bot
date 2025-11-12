@@ -36,7 +36,7 @@ build:
       changes:
         paths:
           - app/**/*
-      when: on_success
+      when: always
 
     - when: manual
 
