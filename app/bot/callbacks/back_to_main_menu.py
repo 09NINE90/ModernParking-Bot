@@ -1,6 +1,6 @@
 from aiogram.types import CallbackQuery
 
-from app.bot_keyboards import main_markup
+from app.bot.keyboard_markup import main_markup
 
 
 async def back_to_main_menu(query: CallbackQuery):
