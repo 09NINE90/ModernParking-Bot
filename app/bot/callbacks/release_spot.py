@@ -10,17 +10,38 @@ from app.bot.callbacks.distribute_parking_spots import distribute_parking_spots
 from app.bot.keyboard_markup import return_markup
 from app.data.init_db import get_db_connection
 from app.bot.parking_states import ParkingStates
+from app.data.repository.parking_releases_repository import insert_spot_on_date, get_user_id_took_by_date_and_spot
+from app.data.repository.parking_spots_repository import get_spot_by_id
+from app.data.repository.users_repository import get_user_id_by_tg_id
 
 
 async def select_spot(query: CallbackQuery, state: FSMContext):
+    """
+        Начинает процесс выбора парковочного места для освобождения.
+
+        Запрашивает у пользователя номер места и переводит диалог в состояние ожидания ввода.
+
+        Параметры:
+            query: CallbackQuery объект от Telegram
+            state: FSMContext для управления состоянием диалога
+    """
     await query.message.edit_text(
         "Напишите номер места, которое хотите освободить:"
     )
 
     await state.set_state(ParkingStates.waiting_for_spot_number)
 
-# Обработка введенного номера места
+
 async def handle_spot_number(message: types.Message, state: FSMContext):
+    """
+        Обрабатывает введенный пользователем номер парковочного места.
+
+        Проверяет валидность номера и при успехе показывает календарь для выбора даты.
+
+        Параметры:
+            message: объект сообщения с введенным номером места
+            state: FSMContext для управления состоянием диалога
+    """
     spot_number = message.text.strip()
 
     if not await is_valid_spot_number(spot_number):
@@ -32,8 +53,19 @@ async def handle_spot_number(message: types.Message, state: FSMContext):
     await state.update_data(selected_spot=spot_number)
     await show_release_calendar_message(message, state)
 
-# Проверка валидности номера места
+
 async def is_valid_spot_number(spot_number: str) -> bool:
+    """
+        Проверяет валидность номера парковочного места.
+
+        Выполняет проверку существования места в базе данных и корректности формата номера.
+
+        Параметры:
+            spot_number: строка с номером места для проверки
+
+        Возвращает:
+            bool: True если место существует и номер корректен, иначе False
+    """
     try:
         spot_num = int(spot_number)
     except ValueError:
@@ -42,27 +74,33 @@ async def is_valid_spot_number(spot_number: str) -> bool:
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute('''
-                            SELECT 1
-                            FROM dont_touch.parking_spots ps
-                            WHERE ps.spot_id = %s
-                            ''', (spot_num,))
-                return cur.fetchone() is not None
+                spot = await get_spot_by_id(cur, spot_num)
+                return spot is not None
     except Exception as e:
         logging.error(f"Error checking spot number {spot_number}: {e}")
         return False
 
-# Показать календарь для освобождения места (для сообщений)
+
 async def show_release_calendar_message(message: types.Message, state: FSMContext):
+    """
+        Показывает календарь для выбора даты освобождения парковочного места.
+
+        Создает интерактивную клавиатуру с датами на 7 дней вперед, исключая выходные дни.
+
+        Параметры:
+            message: объект сообщения от Telegram
+            state: FSMContext для управления состоянием диалога
+    """
     today = date.today()
     builder = InlineKeyboardBuilder()
 
     for i in range(7):
         current_date = today + timedelta(days=i)
-        builder.button(
-            text=current_date.strftime("%d.%m (%a)"),
-            callback_data=f"release_date_{current_date}"
-        )
+        if current_date.weekday() != 5 and current_date.weekday() != 6:
+            builder.button(
+                text=current_date.strftime("%d.%m (%a)"),
+                callback_data=f"release_date_{current_date}"
+            )
 
     builder.button(text="🔙 Назад", callback_data="back_to_main")
     builder.adjust(1)
@@ -72,8 +110,18 @@ async def show_release_calendar_message(message: types.Message, state: FSMContex
         reply_markup=builder.as_markup()
     )
 
-# Обработка освобождения места
+
 async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMContext):
+    """
+    Обрабатывает освобождение парковочного места пользователем на указанную дату.
+
+    Сохраняет информацию об освобожденном месте в базу данных и уведомляет пользователя о результате.
+
+    Параметры:
+        query: CallbackQuery объект от Telegram
+        date_str: строка с датой в формате ISO
+        state: FSMContext для управления состоянием диалога
+    """
     tg_id = query.from_user.id
     release_date = date.fromisoformat(date_str)
 
@@ -89,11 +137,7 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
             with conn.cursor() as cur:
                 spot_num = int(spot_number)
 
-                cur.execute(
-                    'SELECT user_id FROM dont_touch.users WHERE tg_id = %s',
-                    (tg_id,)
-                )
-                user_record = cur.fetchone()
+                user_record = await get_user_id_by_tg_id(cur, tg_id)
 
                 if not user_record:
                     await query.message.edit_text("❌ Ошибка: пользователь не найден")
@@ -101,15 +145,8 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
 
                 db_user_id = user_record[0]
 
-                cur.execute('''
-                    INSERT INTO dont_touch.parking_releases 
-                    (id, user_id, spot_id, release_date)
-                    VALUES (gen_random_uuid(), %s, %s, %s)
-                    ON CONFLICT (spot_id, release_date) DO NOTHING
-                    RETURNING id
-                ''', (db_user_id, spot_num, release_date))
+                result = await insert_spot_on_date(cur, db_user_id, spot_num, release_date)
 
-                result = cur.fetchone()
                 conn.commit()
 
                 if result:
@@ -134,8 +171,20 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
 
     await state.clear()
 
-# Проверяет распределено ли место
+
 async def check_spot_distribution(query: CallbackQuery, db_user_id, spot_number, release_date):
+    """
+        Проверяет распределение парковочного места и уведомляет пользователя о статусе.
+
+        Выполняет проверку, было ли назначено освобожденное место другому пользователю,
+        и информирует владельца о текущем статусе распределения.
+
+        Параметры:
+            query: CallbackQuery объект от Telegram
+            db_user_id: UUID пользователя в базе данных
+            spot_number: номер парковочного места
+            release_date: дата проверки распределения
+    """
     try:
         await query.answer()
 
@@ -143,15 +192,7 @@ async def check_spot_distribution(query: CallbackQuery, db_user_id, spot_number,
 
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute('''
-                            SELECT pr.user_id_took
-                            FROM dont_touch.parking_releases pr
-                            WHERE pr.release_date = %s
-                              AND pr.user_id = %s
-                                AND pr.spot_id = %s
-                            ''', (release_date, db_user_id, spot_number))
-
-                user_id_took = cur.fetchone()
+                user_id_took = await get_user_id_took_by_date_and_spot(cur, db_user_id, spot_number, release_date)
 
                 if not user_id_took:
                     await query.message.answer(
