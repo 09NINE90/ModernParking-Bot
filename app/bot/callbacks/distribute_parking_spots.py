@@ -4,12 +4,19 @@ import random
 from app.data.init_db import get_db_connection
 from app.bot.notification.send_spot_assignment_notification import send_spot_request_assignment_notification, \
     send_spot_release_assignment_notification
-from app.data.repository.distribute_parking_spots_repository import update_parking_releases, update_parking_requests, \
-    update_users, get_release_owner, get_candidates, get_dates_with_availability, get_free_spots
+from app.data.repository.distribute_parking_spots_repository import update_parking_releases, update_parking_request_status, \
+    update_user_rating, get_release_owner, get_candidates, get_dates_with_availability, get_free_spots
 
-
-# Распределяет свободные места среди пользователей в очереди
 async def distribute_parking_spots():
+    """
+        Распределяет свободные парковочные места среди пользователей в очереди.
+
+        Автоматически назначает доступные места пользователям с наименьшим рейтингом,
+        уведомляя обе стороны о результате распределения.
+
+        Возвращает:
+            int: количество успешно распределенных мест
+        """
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
@@ -49,9 +56,9 @@ async def distribute_parking_spots():
 
                         await update_parking_releases(cur, user_id, release_id)
 
-                        await update_parking_requests(cur, request_id)
+                        await update_parking_request_status(cur, request_id)
 
-                        await update_users(cur, user_id)
+                        await update_user_rating(cur, user_id)
 
                         await send_spot_request_assignment_notification(tg_id, spot_id, distribution_date)
                         distributed_count += 1
