@@ -12,7 +12,7 @@ variables:
   WORK_DIR: "~/modern_parking_bot"
 
 lint:
-  image: python:pylint-slim
+  image: python:pylint
   stage: test_before_build
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
