@@ -23,7 +23,7 @@ lint:
     - files=$(find . -name "*.py")
     - pylint $files
   tags:
-    - test
+    - docker
   allow_failure: true
 
 
