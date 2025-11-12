@@ -1,0 +1,132 @@
+stages:
+  - build
+  - test
+  - deploy
+  - logs
+
+variables:
+  IMAGE_NAME: "modernParkingBot"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: unix:///var/run/docker.sock
+  WORK_DIR: "~/modern_parking_bot"
+
+lint:
+  image: python:3.12
+  stage: test
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH != "main"'
+      when: manual
+  script:
+    - pip install --no-cache-dir pylint  -r requirements.txt
+    - files=$(find . -name "*.py")
+    - pylint $files
+  tags:
+    - docker
+  allow_failure: true
+
+
+build:
+  image: docker:20.10.16
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "clean" || $CI_COMMIT_BRANCH == "dev"'
+      changes:
+        paths:
+          - app/**/*
+      when: on_success
+
+    - when: manual
+
+  services:
+    - name: docker:20.10.16-dind
+      alias: docker
+      command: ["--insecure-registry=$REGISTRY"]
+  before_script:
+    - docker info
+    - echo "$REGISTRY_TOKEN" | docker login --username "$REGISTRY_USER_LOGIN" --password-stdin
+  script:
+    - |
+      docker build \
+        --build-arg DB_USER=$DB_USER \
+        --build-arg DB_PASSWORD=$DB_PASSWORD \
+        --build-arg DB_HOST=$DB_HOST \
+        --build-arg DB_PORT=$DB_PORT \
+        --build-arg DB_NAME=$DB_NAME \
+        --build-arg BOT_TOKEN=$BOT_TOKEN \
+        --build-arg GROUP_ID=$GROUP_ID \
+        --tag $REGISTRY/$REGISTRY_PROJECT_NAME:latest \
+        .
+    - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:latest
+
+  tags:
+    - docker
+  when: manual
+
+
+deploy-standalone:
+  image: ubuntu:22.04
+  stage: deploy
+  needs: ["build"]
+  when: on_success
+  before_script:
+  # Устанавливаем необходимые пакеты
+    - apt-get update && apt-get install -y openssh-client sudo
+
+    # Создаём директорию .ssh и задаём права
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    # Записываем приватный ключ
+    - echo "$SSH_PRIVATE_KEY" >  ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+
+    # Добавляем хост в known_hosts
+    - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh $SSH_USER@$SSH_HOST "echo $REGISTRY_TOKEN | sudo docker login --username $REGISTRY_USER_LOGIN --password-stdin  && cd $WORK_DIR &&  sudo docker compose pull && sudo docker compose up  --force-recreate -d && exit"
+  tags:
+    - docker
+
+
+shutdown-standalone:
+  image: ubuntu:22.04
+  stage: deploy
+  when: manual
+  before_script:
+    - apt-get update && apt-get install -y openssh-client sudo
+
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed2219
+
+    - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh $SSH_USER@$SSH_HOST "cd $WORK_DIR &&  sudo docker compose down  && exit"
+  tags:
+    - docker
+
+logs-standalone:
+  image: ubuntu:22.04
+  stage: logs
+  needs: ["deploy-standalone"]
+  when: manual
+  before_script:
+    - apt-get update && apt-get install -y openssh-client sudo
+
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+
+    - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh $SSH_USER@$SSH_HOST "sudo docker logs -f $CONTAINER_NAME"
+  tags:
+    - docker
+
