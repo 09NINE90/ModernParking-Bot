@@ -66,6 +66,7 @@ build:
         .
     - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:latest
     - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:$WORK_TAG
+    - curl --header "PRIVATE-TOKEN:$PAT" --data "tag_name=$WORK_TAG" --data "ref=$CI_COMMIT_SHA" "$CI_SERVER_URL/api/v4/projects/$CI_PROJECT_ID/repository/tags"
 
 
   tags:
