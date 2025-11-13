@@ -1,15 +1,14 @@
 stages:
-  - build
   - test
+  - build
   - deploy
   - logs
 
 variables:
-  IMAGE_NAME: "modernParkingBot"
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
   DOCKER_HOST: unix:///var/run/docker.sock
-  WORK_DIR: "~/modern_parking_bot"
+  WORK_TAG: ""
 
 lint:
   image: python:3.12
@@ -41,12 +40,15 @@ build:
     - when: manual
 
   services:
-    - name: docker:20.10.16-dind
+    - name: docker:20.10.16
       alias: docker
       command: ["--insecure-registry=$REGISTRY"]
   before_script:
     - docker info
     - echo "$REGISTRY_TOKEN" | docker login --username "$REGISTRY_USER_LOGIN" --password-stdin
+    - apk add --no-cache curl bash
+    - VERSION=$(cat version.txt | tr -d '[:space:]')
+    - export WORK_TAG="$VERSION-$(date +%Y%m%d-%H_%M)"
   script:
     - |
       docker build \
@@ -58,15 +60,19 @@ build:
         --build-arg BOT_TOKEN=$BOT_TOKEN \
         --build-arg GROUP_ID=$GROUP_ID \
         --tag $REGISTRY/$REGISTRY_PROJECT_NAME:latest \
+        --tag $REGISTRY/$REGISTRY_PROJECT_NAME:$WORK_TAG \
         .
     - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:latest
+    - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:$WORK_TAG
+    - curl --header "PRIVATE-TOKEN:$PAT" --data "tag_name=$WORK_TAG" --data "ref=$CI_COMMIT_SHA" "$CI_SERVER_URL/api/v4/projects/$CI_PROJECT_ID/repository/tags"
+
 
   tags:
     - docker
   when: manual
 
 
-deploy-standalone:
+deploy:
   image: ubuntu:22.04
   stage: deploy
   needs: ["build"]
@@ -91,7 +97,7 @@ deploy-standalone:
     - docker
 
 
-shutdown-standalone:
+shutdown:
   image: ubuntu:22.04
   stage: deploy
   when: manual
@@ -110,10 +116,10 @@ shutdown-standalone:
   tags:
     - docker
 
-logs-standalone:
+logs:
   image: ubuntu:22.04
   stage: logs
-  needs: ["deploy-standalone"]
+  needs: ["deploy"]
   when: manual
   before_script:
     - apt-get update && apt-get install -y openssh-client sudo
