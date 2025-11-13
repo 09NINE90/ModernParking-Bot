@@ -1,3 +1,7 @@
+from app.data.models.parking_releases import ParkingReleaseStatus
+from app.data.models.parking_requests import ParkingRequestStatus
+
+
 async def get_dates_with_availability(cur):
     """
         Получает список дат, на которые есть доступные парковочные места и ожидающие запросы.
@@ -28,7 +32,7 @@ async def get_dates_with_availability(cur):
     cur.execute('''
                 SELECT DISTINCT pr.release_date
                 FROM dont_touch.parking_releases pr
-                WHERE pr.user_id_took IS NULL
+                WHERE pr.status = 'PENDING'
                   AND EXISTS (SELECT 1
                               FROM dont_touch.parking_requests prq
                               WHERE prq.request_date = pr.release_date
@@ -36,6 +40,7 @@ async def get_dates_with_availability(cur):
                 ''')
 
     return [row[0] for row in cur.fetchall()]
+
 
 async def get_free_spots(cur, distribution_date):
     """
@@ -74,6 +79,7 @@ async def get_free_spots(cur, distribution_date):
                 ORDER BY created_at ASC
                 ''', (distribution_date,))
     return cur.fetchall()
+
 
 async def get_candidates(cur, distribution_date, free_spots):
     """
@@ -119,6 +125,7 @@ async def get_candidates(cur, distribution_date, free_spots):
 
     return cur.fetchall()
 
+
 async def get_release_owner(cur, release_id):
     """
        Получает информацию о пользователе, который освободил парковочное место.
@@ -155,7 +162,8 @@ async def get_release_owner(cur, release_id):
 
     return cur.fetchone()
 
-async def update_parking_releases(cur, user_id, release_id):
+
+async def update_parking_releases(cur, user_id, release_id, current_status: ParkingReleaseStatus):
     """
     Назначает парковочное место конкретному пользователю.
 
@@ -178,36 +186,40 @@ async def update_parking_releases(cur, user_id, release_id):
     """
     cur.execute('''
                 UPDATE dont_touch.parking_releases
-                SET user_id_took = %s
+                SET user_id_took = %s,
+                    status       = %s
                 WHERE id = %s
-                ''', (user_id, release_id))
+                ''', (user_id, current_status.value, release_id))
 
-async def update_parking_request_status(cur, request_id):
+
+async def update_parking_request_status(cur, request_id, current_status: ParkingRequestStatus):
     """
-        Обновляет статус запроса на парковку после успешного распределения места.
+    Обновляет статус запроса на парковку.
 
-        Помечает запрос как выполненный и фиксирует время обработки.
+    Изменяет статус запроса на указанный и фиксирует время обработки.
 
-        Параметры:
-            cur: курсор базы данных для выполнения SQL-запросов
-            request_id: UUID запроса в таблице parking_requests
+    Параметры:
+        cur: курсор базы данных для выполнения SQL-запросов
+        request_id: UUID запроса в таблице parking_requests
+        current_status: новый статус для установки ('ACCEPTED', 'CANCELED', 'NOT_FOUND', 'PENDING')
 
-        Логика:
-            - Меняет статус с 'PENDING' на 'ACCEPT'
-            - Устанавливает processed_at в текущее время сервера БД
+    Логика:
+        - Устанавливает указанный статус для запроса
+        - Фиксирует время обработки в processed_at
+        - Обновляет только указанный запрос по ID
 
-        Особенности:
-            - Закрывает цикл обработки запроса
-            - CURRENT_TIMESTAMP гарантирует единое время на сервере БД
-            - Статус 'ACCEPT' указывает на успешное выполнение запроса
-            - Асинхронная функция, требует await при вызове
-        """
+    Особенности:
+        - Универсальный метод для изменения статуса запроса
+        - CURRENT_TIMESTAMP гарантирует единое время на сервере БД
+        - Поддерживает все валидные статусы: PENDING, ACCEPTED, CANCELED, NOT_FOUND
+        - Асинхронная функция, требует await при вызове
+    """
     cur.execute('''
                 UPDATE dont_touch.parking_requests
-                SET status       = 'ACCEPT',
+                SET status       = %s,
                     processed_at = CURRENT_TIMESTAMP
                 WHERE id = %s
-                ''', (request_id,))
+                ''', (current_status.value, request_id,))
 
 
 async def update_user_rating(cur, user_id):
