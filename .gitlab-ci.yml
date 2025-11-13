@@ -51,7 +51,7 @@ build:
   script:
     - VERSION=$(cat version.txt | tr -d '[:space:]')
     - export WORK_TAG="$VERSION-$(date +%Y%m%d-%H_%M)"
-    - echo "✅ Версия успешно установлена: $WORK_TAG"
+    - echo "Версия успешно установлена: $WORK_TAG"
     - |
       docker build \
         --build-arg DB_USER=$DB_USER \
