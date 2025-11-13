@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from app.bot.constants.car_emojis import get_random_car_emoji
 from app.bot.constants.group_id import GROUP_ID
 from app.bot.notification.statistics_notification import statistics_notification
@@ -10,14 +8,13 @@ from app.data.repository.parking_releases_repository import free_parking_release
 from app.data.repository.statistics_repository import get_parking_transfers_by_date
 
 
-async def statistics_service():
+async def statistics_service(day):
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            today = datetime.today()
-            free_parking_releases = await free_parking_releases_by_date(cur, today.date())
+            free_parking_releases = await free_parking_releases_by_date(cur, day.date())
             free_spots = len(free_parking_releases)
 
-            results = await get_parking_transfers_by_date(cur, today.date())
+            results = await get_parking_transfers_by_date(cur, day.date())
             transfers = [ParkingTransfer(spot_id=row[0], recipient_tg_id=row[1], owner_tg_id=row[2])
                          for row in results]
 
@@ -32,8 +29,8 @@ async def statistics_service():
                     message_text += f"{emoji} {owner} отдал место <b>№{spot}</b> -> {recipient}\n\n"
 
                 await statistics_notification(tg_chat_id=GROUP_ID, message=message_text,
-                                              assignment_date=today.date())
+                                              assignment_date=day.date())
             else:
                 message_text += "👀Трансферов мест пока не было..."
                 await statistics_notification(tg_chat_id=GROUP_ID, message=message_text,
-                                              assignment_date=today.date())
+                                              assignment_date=day.date())
