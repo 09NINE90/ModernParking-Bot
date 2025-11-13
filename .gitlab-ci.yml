@@ -48,11 +48,10 @@ build:
   before_script:
     - docker info
     - echo "$REGISTRY_TOKEN" | docker login --username "$REGISTRY_USER_LOGIN" --password-stdin
-  script:
     - apt-get update && apt-get install -y curl
     - VERSION=$(cat version.txt | tr -d '[:space:]')
     - export WORK_TAG="$VERSION-$(date +%Y%m%d-%H_%M)"
-#    - echo "Версия успешно установлена: $WORK_TAG"
+  script:
     - |
       docker build \
         --build-arg DB_USER=$DB_USER \
