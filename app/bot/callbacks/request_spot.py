@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from app.bot.callbacks.distribute_parking_spots import distribute_parking_spots
+from app.bot.service.distribution_service import distribute_parking_spots
 from app.bot.keyboard_markup import return_markup
 from app.data.init_db import get_db_connection
 from app.data.repository.parking_releases_repository import get_user_spot_by_date, \
@@ -44,7 +44,7 @@ async def show_request_calendar(query: CallbackQuery, state: FSMContext):
     )
 
 
-async def process_spot_request(query: CallbackQuery, date_str):
+async def process_spot_request(query: CallbackQuery, date_str, state: FSMContext):
     """
         Обрабатывает запрос на парковочное место от пользователя.
 
@@ -85,7 +85,7 @@ async def process_spot_request(query: CallbackQuery, date_str):
                         f"✅ Отлично! Вы заняли место в очереди на парковочное место на {request_date.strftime('%d.%m.%Y')}",
                         reply_markup=return_markup
                     )
-                    await check_spot_distribution(query, db_user_id, request_date)
+                    await check_spot_distribution(query, state, db_user_id, request_date)
                 else:
                     await query.message.edit_text(
                         f"⚠️ Вы уже заняли место в очереди на парковочное место на {request_date.strftime('%d.%m.%Y')}",
@@ -100,7 +100,7 @@ async def process_spot_request(query: CallbackQuery, date_str):
         )
 
 
-async def check_spot_distribution(query: CallbackQuery, db_user_id, request_date):
+async def check_spot_distribution(query: CallbackQuery, state: FSMContext, db_user_id, request_date):
     """
         Проверяет распределение парковочных мест для пользователя после создания запроса.
 
@@ -114,7 +114,7 @@ async def check_spot_distribution(query: CallbackQuery, db_user_id, request_date
     try:
         await query.answer()
 
-        await distribute_parking_spots()
+        await distribute_parking_spots(state)
 
         with get_db_connection() as conn:
             with conn.cursor() as cur:

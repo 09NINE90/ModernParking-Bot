@@ -67,6 +67,7 @@ async def get_spot_id_by_user_id_and_request_date(cur, db_user_id, request_date)
                 FROM dont_touch.parking_releases
                 WHERE release_date = %s
                   AND user_id_took = %s
+                  AND status = 'ACCEPTED'
                 ORDER BY created_at ASC
                 ''', (request_date, str(db_user_id),))
 
@@ -146,6 +147,7 @@ async def get_user_id_took_by_date_and_spot(cur, db_user_id, spot_number, releas
                 WHERE pr.release_date = %s
                   AND pr.user_id = %s
                   AND pr.spot_id = %s
+                  AND pr.status = 'ACCEPTED'
                 ''', (release_date, db_user_id, spot_number))
 
     return cur.fetchone()
@@ -166,7 +168,7 @@ async def free_parking_releases_by_date(cur, date):
     cur.execute('''
                 SELECT *
                 FROM dont_touch.parking_releases pr
-                WHERE pr.user_id_took IS NULL
+                WHERE pr.status = 'PENDING'
                   AND pr.release_date = %s
                 ''', (date,))
 
