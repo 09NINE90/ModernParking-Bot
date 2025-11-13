@@ -42,13 +42,13 @@ build:
     - when: manual
 
   services:
-    - name: docker:20.10.16-dind
+    - name: docker:20.10.16
       alias: docker
       command: ["--insecure-registry=$REGISTRY"]
   before_script:
     - docker info
     - echo "$REGISTRY_TOKEN" | docker login --username "$REGISTRY_USER_LOGIN" --password-stdin
-    - apt-get update && apt-get install -y curl
+    - apk add --no-cache curl bash
     - VERSION=$(cat version.txt | tr -d '[:space:]')
     - export WORK_TAG="$VERSION-$(date +%Y%m%d-%H_%M)"
   script:
