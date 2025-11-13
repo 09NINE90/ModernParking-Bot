@@ -36,10 +36,6 @@ async def handle_callback(query: CallbackQuery, state: FSMContext):
         case str() if data.startswith("request_date_"):
             date_str = data.replace("request_date_", "")
             await process_spot_request(query, date_str)
-        # case "my_stats":
-        #     await self.show_user_stats(query)
-        # case "available_spots":
-        #     await self.show_available_spots(query)
         case "back_to_main":
             await back_to_main_menu(query)
 
