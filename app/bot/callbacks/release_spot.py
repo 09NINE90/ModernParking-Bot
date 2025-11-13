@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from app.bot.callbacks.distribute_parking_spots import distribute_parking_spots
+from app.bot.service.distribution_service import distribute_parking_spots
 from app.bot.keyboard_markup import return_markup
 from app.data.init_db import get_db_connection
 from app.bot.parking_states import ParkingStates
@@ -154,7 +154,7 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
                         f"✅ Отлично! Вы освободили место #{spot_num} на {release_date.strftime('%d.%m.%Y')}",
                         reply_markup=return_markup
                     )
-                    await check_spot_distribution(query, db_user_id, spot_num, release_date)
+                    await check_spot_distribution(query, state, db_user_id, spot_num, release_date)
                 else:
                     await query.message.edit_text(
                         f"⚠️ Место #{spot_num} уже освобождено на {release_date.strftime('%d.%m.%Y')}",
@@ -172,7 +172,7 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
     await state.clear()
 
 
-async def check_spot_distribution(query: CallbackQuery, db_user_id, spot_number, release_date):
+async def check_spot_distribution(query: CallbackQuery, state: FSMContext,db_user_id, spot_number, release_date):
     """
         Проверяет распределение парковочного места и уведомляет пользователя о статусе.
 
@@ -188,7 +188,7 @@ async def check_spot_distribution(query: CallbackQuery, db_user_id, spot_number,
     try:
         await query.answer()
 
-        await distribute_parking_spots()
+        await distribute_parking_spots(state)
 
         with get_db_connection() as conn:
             with conn.cursor() as cur:

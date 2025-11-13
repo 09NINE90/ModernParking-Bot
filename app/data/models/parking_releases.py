@@ -2,7 +2,15 @@ import uuid
 
 from dataclasses import dataclass
 from datetime import date, datetime
+from enum import Enum
 from typing import Optional
+
+class ParkingReleaseStatus(Enum):
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    CANCELED = "CANCELED"
+    NOT_FOUND = "NOT_FOUND"
+    WAITING = "WAITING"
 
 # Модель для таблицы parking_releases
 @dataclass
