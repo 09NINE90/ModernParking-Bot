@@ -3,6 +3,7 @@ from aiogram.types import CallbackQuery
 
 from app.bot.callbacks.back_to_main_menu import back_to_main_menu
 from app.bot.callbacks.handle_cancel_spot import handle_cancel_spot
+from app.bot.callbacks.handle_my_statistics import handle_my_statistics
 from app.bot.callbacks.handle_take_spot import handle_take_spot
 from app.bot.callbacks.release_spot import select_spot, process_spot_release
 from app.bot.callbacks.request_spot import show_request_calendar, process_spot_request
@@ -34,3 +35,6 @@ async def handle_callback(query: CallbackQuery, state: FSMContext):
 
         case "cancel_spot":
             await handle_cancel_spot(query, state)
+
+        case "my_statistics":
+            await handle_my_statistics(query)

@@ -194,7 +194,7 @@ async def update_parking_releases(cur, user_id, release_id, current_status: Park
                 SET user_id_took = %s,
                     status       = %s
                 WHERE id = %s
-                ''', (user_id, current_status.value, release_id))
+                ''', (user_id, current_status.name, release_id))
 
 
 async def update_parking_request_status(cur, request_id, current_status: ParkingRequestStatus):
@@ -224,7 +224,7 @@ async def update_parking_request_status(cur, request_id, current_status: Parking
                 SET status       = %s,
                     processed_at = CURRENT_TIMESTAMP
                 WHERE id = %s
-                ''', (current_status.value, request_id,))
+                ''', (current_status.name, request_id,))
 
 
 async def update_user_rating(cur, user_id):

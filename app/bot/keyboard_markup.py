@@ -18,6 +18,7 @@ back_markup = InlineKeyboardMarkup(inline_keyboard=back_keyboard)
 main_keyboard = [
     [InlineKeyboardButton(text="🗓 Освободить место", callback_data="release_spot")],
     [InlineKeyboardButton(text="🚗 Запросить место", callback_data="request_spot")],
+    [InlineKeyboardButton(text="📊 Моя статистика", callback_data="my_statistics")],
 ]
 main_markup = InlineKeyboardMarkup(inline_keyboard=main_keyboard)
 
