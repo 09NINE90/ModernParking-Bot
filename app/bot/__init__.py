@@ -1,9 +1,8 @@
-import os
+from aiogram import Dispatcher, Router
+from aiogram.fsm.storage.memory import MemoryStorage
+from app.bot.handlers import register_handlers
 
-from aiogram import Bot
-from aiogram.client.default import DefaultBotProperties
-from dotenv import load_dotenv
-
-load_dotenv()
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
-bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
+dp = Dispatcher(storage=MemoryStorage())
+router = Router()
+dp.include_router(router)
+register_handlers(router)

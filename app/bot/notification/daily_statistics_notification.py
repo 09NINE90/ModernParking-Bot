@@ -1,17 +1,17 @@
 import logging
 from datetime import datetime
 
-from app.bot import bot
+from app.bot.config import bot
 
 
-async def statistics_notification(tg_chat_id: int, message: str, assignment_date):
+async def daily_statistics_notification(tg_chat_id: int, message: str, assignment_date):
     """Отправляет уведомление пользователю о назначении места"""
     day_text = get_day_text(assignment_date)
 
     try:
         message_text = (
             f"👋<b>Всем привет!</b>\n"
-            f"Ситуация на {day_text} <u>{assignment_date.strftime('%d.%m.%Y')}</u>:\n"
+            f"📊 Ситуация на {day_text} <u>{assignment_date.strftime('%d.%m.%Y')}</u>:\n"
             f"{message}"
         )
 

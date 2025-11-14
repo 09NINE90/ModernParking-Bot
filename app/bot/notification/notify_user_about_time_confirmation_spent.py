@@ -1,6 +1,6 @@
 import logging
 
-from app.bot import bot
+from app.bot.config import bot
 from app.bot.dto.spot_confirmation_dto import SpotConfirmationDTO
 from app.bot.keyboard_markup import return_markup
 from app.bot.users.get_user_full_mention import get_user_full_mention
@@ -13,7 +13,7 @@ async def notify_user_about_time_confirmation_spent(spot_confirmation_data: Spot
         message_text = (
             f"Приветствую, {user}!\n\n"
             f"⏰ Время на подтверждение места истекло!\n\n"
-            f"<b>Место:</b> #{spot_confirmation_data.spot_number} на "
+            f"<b>Место:</b> №{spot_confirmation_data.spot_number} на "
             f"{spot_confirmation_data.assignment_date.strftime('%d.%m.%Y')} "
             f"было освобождено для других пользователей.\n\n"
             f"️️⚠️ Я больше не буду предлагать вам места на эту дату"

@@ -28,7 +28,7 @@ def cancel_scheduled_cancellation(confirmation_data):
         job = scheduler.get_job(job_id)
         if job:
             scheduler.remove_job(job_id)
-            logging.info(f"Cancelled scheduled job: {job_id}")
+            logging.debug(f"Cancelled scheduled job: {job_id}")
             return True
         return False
 

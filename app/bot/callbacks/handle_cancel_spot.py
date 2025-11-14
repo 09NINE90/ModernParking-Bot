@@ -6,4 +6,4 @@ from app.bot.service.cancel_spot_service import cancel_spot
 
 async def handle_cancel_spot(query: CallbackQuery, state: FSMContext):
     """Обрабатывает отмену занятия места"""
-    await cancel_spot(query, state)
+    await cancel_spot(query)

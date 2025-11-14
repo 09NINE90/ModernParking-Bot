@@ -1,6 +1,6 @@
 import logging
 
-from app.bot import bot
+from app.bot.config import bot
 from app.bot.keyboard_markup import return_markup
 from app.bot.users.get_user_full_mention import get_user_full_mention
 
@@ -12,7 +12,7 @@ async def notify_owner_about_taken_spot(tg_user_id: int, spot_number: int, assig
         message_text = (
             f"Приветствую, {user}\n\n"
             f"✅ Ваше парковочное место назначено!\n\n"
-            f"📍 <b>Место:</b> #{spot_number}\n"
+            f"📍 <b>Место:</b> №{spot_number}\n"
             f"📅 <b>Дата:</b> {assignment_date.strftime('%d.%m.%Y')}"
         )
 

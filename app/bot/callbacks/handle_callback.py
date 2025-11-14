@@ -11,9 +11,6 @@ from app.bot.callbacks.request_spot import show_request_calendar, process_spot_r
 async def handle_callback(query: CallbackQuery, state: FSMContext):
     data = query.data
 
-    current_state = await state.get_state()
-    print(f"current_state: {current_state}")
-
     match data:
         case "release_spot":
             await select_spot(query, state)
