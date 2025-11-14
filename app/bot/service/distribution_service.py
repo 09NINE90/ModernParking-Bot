@@ -2,14 +2,10 @@ import logging
 import random
 from datetime import datetime
 
-from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
-
 from app.bot.dto.spot_confirmation_dto import SpotConfirmationDTO
 from app.bot.notification.notify_owner_about_taken_spot import notify_owner_about_taken_spot
 from app.bot.notification.notify_user_about_assigned_spot import notify_user_about_assigned_spot
 from app.bot.notification.notify_user_about_found_spot import notify_user_about_found_spot
-from app.bot.parking_states import ParkingStates
 from app.data.init_db import get_db_connection
 from app.data.models.parking_releases import ParkingReleaseStatus
 from app.data.models.parking_requests import ParkingRequestStatus
@@ -18,7 +14,7 @@ from app.data.repository.distribute_parking_spots_repository import update_parki
     update_user_rating, get_release_owner, get_candidates, get_dates_with_availability, get_free_spots
 
 
-async def distribute_parking_spots(state: FSMContext = None, query: CallbackQuery = None):
+async def distribute_parking_spots():
     """
         Распределяет свободные парковочные места среди пользователей в очереди.
 
@@ -67,8 +63,8 @@ async def distribute_parking_spots(state: FSMContext = None, query: CallbackQuer
                             spot_confirmation_data = SpotConfirmationDTO(
                                 str(user_id), tg_id, spot_id, distribution_date, release_id, request_id
                             )
-                            await state.set_state(ParkingStates.waiting_spot_confirmation)
-                            await notify_user_about_found_spot(spot_confirmation_data, state)
+                            await notify_user_about_found_spot(spot_confirmation_data)
+
                         else:
                             release_owner = await get_release_owner(cur, release_id)
 
@@ -96,7 +92,7 @@ async def distribute_parking_spots(state: FSMContext = None, query: CallbackQuer
                         notification['spot_number'],
                         notification['date']
                     )
-                logging.info(f"Distributed {distributed_count} parking spots")
+                logging.debug(f"Distributed {distributed_count} parking spots")
                 return distributed_count
 
     except Exception as e:

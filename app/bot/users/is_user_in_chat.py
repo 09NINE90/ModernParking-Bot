@@ -1,6 +1,6 @@
 from aiogram.enums import ChatMemberStatus
 
-from app.bot import bot
+from app.bot.config import bot
 
 
 async def is_user_in_chat(user_tg_id: int, group_id: int) -> bool:

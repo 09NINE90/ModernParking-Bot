@@ -1,6 +1,6 @@
 import logging
 
-from app.bot import bot
+from app.bot.config import bot
 
 
 async def get_user_full_mention(user_id: int) -> str:

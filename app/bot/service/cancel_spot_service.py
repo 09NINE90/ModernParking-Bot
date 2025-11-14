@@ -1,20 +1,21 @@
 import logging
-from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from app.bot.keyboard_markup import return_markup
-from app.bot.schedule.schedule_utils import cancel_scheduled_cancellation
+from app.schedule.schedule_utils import cancel_scheduled_cancellation
 from app.bot.service.distribution_service import distribute_parking_spots
-from app.bot.service.spot_confirmation_service import process_spot_cancel
+from app.bot.service.process_confirmation_spot_service import process_spot_cancel
+from app.utils import confirmation_cache
 
-async def cancel_spot(query: CallbackQuery, state: FSMContext):
+
+async def cancel_spot(query: CallbackQuery):
     """Обрабатывает отмену занятия места"""
+    user_tg_id = query.from_user.id
+
     try:
-        data = await state.get_data()
-        confirmation_data = data.get('confirmation_data')
+        confirmation_data = await confirmation_cache.get(user_tg_id)
 
         if not confirmation_data:
             await query.message.edit_text("❌ Данные о месте устарели")
-            await state.clear()
             return
 
         cancel_scheduled_cancellation(confirmation_data)
@@ -33,14 +34,13 @@ async def cancel_spot(query: CallbackQuery, state: FSMContext):
                 "❌ Не удалось занять место. Возможно, оно уже занято.",
                 reply_markup=return_markup
             )
-        await state.clear()
 
+        await confirmation_cache.delete(user_tg_id)
     except Exception as e:
         logging.error(f"Error taking spot for user {query.from_user.id}: {e}")
         await query.message.edit_text(
             "❌ Произошла ошибка при занятии места",
             reply_markup=return_markup
         )
-        await state.clear()
     finally:
-        await distribute_parking_spots(state)
+        await distribute_parking_spots()

@@ -5,8 +5,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from app.bot.constants.weekdays_ru import weekdays_ru
 from app.bot.service.distribution_service import distribute_parking_spots
-from app.bot.keyboard_markup import return_markup
+from app.bot.keyboard_markup import return_markup, date_list_markup
 from app.data.init_db import get_db_connection
 from app.data.repository.parking_releases_repository import get_user_spot_by_date, \
     get_spot_id_by_user_id_and_request_date
@@ -24,23 +25,9 @@ async def show_request_calendar(query: CallbackQuery, state: FSMContext):
             query: CallbackQuery объект от Telegram
             state: FSMContext для управления состоянием диалога
     """
-    today = date.today()
-    builder = InlineKeyboardBuilder()
-
-    for i in range(7):
-        current_date = today + timedelta(days=i)
-        if current_date.weekday() != 5 and current_date.weekday() != 6:
-            builder.button(
-                text=current_date.strftime("%d.%m (%a)"),
-                callback_data=f"request_date_{current_date}"
-            )
-
-    builder.button(text="🔙 Назад", callback_data="back_to_main")
-    builder.adjust(1)
-
     await query.message.edit_text(
         "Выберите дату, когда освободите свое место:",
-        reply_markup=builder.as_markup()
+        reply_markup=date_list_markup(callback_name='request_date')
     )
 
 
@@ -114,7 +101,7 @@ async def check_spot_distribution(query: CallbackQuery, state: FSMContext, db_us
     try:
         await query.answer()
 
-        await distribute_parking_spots(state)
+        await distribute_parking_spots()
 
         with get_db_connection() as conn:
             with conn.cursor() as cur:
