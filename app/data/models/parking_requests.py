@@ -7,9 +7,10 @@ from enum import Enum
 
 class ParkingRequestStatus(Enum):
     PENDING = "PENDING"
-    ACCEPT = "ACCEPT"
+    ACCEPTED = "ACCEPTED"
     CANCELED = "CANCELED"
     NOT_FOUND = "NOT_FOUND"
+    WAITING_CONFIRMATION = "WAITING_CONFIRMATION"
 
 # Модель для таблицы parking_requests
 @dataclass
@@ -41,7 +42,7 @@ class ParkingRequest:
         )
 
     def mark_as_accepted(self):
-        self.status = ParkingRequestStatus.ACCEPT
+        self.status = ParkingRequestStatus.ACCEPTED
         self.processed_at = datetime.now()
 
     def mark_as_canceled(self):

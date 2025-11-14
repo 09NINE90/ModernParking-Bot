@@ -1,13 +1,11 @@
 import logging
-from datetime import date, timedelta
+from datetime import date
 
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-
-from app.bot.callbacks.distribute_parking_spots import distribute_parking_spots
-from app.bot.keyboard_markup import return_markup
+from app.bot.service.distribution_service import distribute_parking_spots
+from app.bot.keyboard_markup import return_markup, back_markup, date_list_markup
 from app.data.init_db import get_db_connection
 from app.bot.parking_states import ParkingStates
 from app.data.repository.parking_releases_repository import insert_spot_on_date, get_user_id_took_by_date_and_spot
@@ -26,7 +24,8 @@ async def select_spot(query: CallbackQuery, state: FSMContext):
             state: FSMContext для управления состоянием диалога
     """
     await query.message.edit_text(
-        "Напишите номер места, которое хотите освободить:"
+        "Напишите номер места, которое хотите освободить:",
+        reply_markup = back_markup
     )
 
     await state.set_state(ParkingStates.waiting_for_spot_number)
@@ -91,23 +90,9 @@ async def show_release_calendar_message(message: types.Message, state: FSMContex
             message: объект сообщения от Telegram
             state: FSMContext для управления состоянием диалога
     """
-    today = date.today()
-    builder = InlineKeyboardBuilder()
-
-    for i in range(7):
-        current_date = today + timedelta(days=i)
-        if current_date.weekday() != 5 and current_date.weekday() != 6:
-            builder.button(
-                text=current_date.strftime("%d.%m (%a)"),
-                callback_data=f"release_date_{current_date}"
-            )
-
-    builder.button(text="🔙 Назад", callback_data="back_to_main")
-    builder.adjust(1)
-
     await message.answer(
         "Выберите дату, когда освободите свое место:",
-        reply_markup=builder.as_markup()
+        reply_markup=date_list_markup(callback_name='release_date')
     )
 
 
@@ -154,7 +139,7 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
                         f"✅ Отлично! Вы освободили место #{spot_num} на {release_date.strftime('%d.%m.%Y')}",
                         reply_markup=return_markup
                     )
-                    await check_spot_distribution(query, db_user_id, spot_num, release_date)
+                    await check_spot_distribution(query, state, db_user_id, spot_num, release_date)
                 else:
                     await query.message.edit_text(
                         f"⚠️ Место #{spot_num} уже освобождено на {release_date.strftime('%d.%m.%Y')}",
@@ -172,7 +157,7 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
     await state.clear()
 
 
-async def check_spot_distribution(query: CallbackQuery, db_user_id, spot_number, release_date):
+async def check_spot_distribution(query: CallbackQuery, state: FSMContext,db_user_id, spot_number, release_date):
     """
         Проверяет распределение парковочного места и уведомляет пользователя о статусе.
 

@@ -33,6 +33,7 @@ async def get_user_spot_by_date(cur, request_date, db_user_id):
                 ''', (request_date, db_user_id))
     return cur.fetchone()
 
+
 async def get_spot_id_by_user_id_and_request_date(cur, db_user_id, request_date):
     """
         Получает идентификатор парковочного места, закрепленного за пользователем на указанную дату.
@@ -67,10 +68,12 @@ async def get_spot_id_by_user_id_and_request_date(cur, db_user_id, request_date)
                 FROM dont_touch.parking_releases
                 WHERE release_date = %s
                   AND user_id_took = %s
+                  AND status = 'ACCEPTED'
                 ORDER BY created_at ASC
                 ''', (request_date, str(db_user_id),))
 
     return cur.fetchone()
+
 
 async def insert_spot_on_date(cur, db_user_id, spot_num, release_date):
     """
@@ -146,9 +149,11 @@ async def get_user_id_took_by_date_and_spot(cur, db_user_id, spot_number, releas
                 WHERE pr.release_date = %s
                   AND pr.user_id = %s
                   AND pr.spot_id = %s
+                  AND pr.status = 'ACCEPTED'
                 ''', (release_date, db_user_id, spot_number))
 
     return cur.fetchone()
+
 
 async def free_parking_releases_by_date(cur, date):
     """
@@ -166,8 +171,36 @@ async def free_parking_releases_by_date(cur, date):
     cur.execute('''
                 SELECT *
                 FROM dont_touch.parking_releases pr
-                WHERE pr.user_id_took IS NULL
+                WHERE pr.status = 'PENDING'
                   AND pr.release_date = %s
                 ''', (date,))
+
+    return cur.fetchall()
+
+
+async def parking_releases_by_week(cur, status, monday_date, friday_date):
+    """
+    Асинхронно получает записи о возврате парковочных мест за указанную неделю по заданному статусу.
+
+    Выполняет SQL-запрос к таблице parking_releases для выборки всех записей,
+    соответствующих указанному статусу и периоду времени между понедельником и пятницей.
+
+    Args:
+        cur: Курсор базы данных для выполнения SQL-запросов
+        status (str): Статус записей о возврате для фильтрации (например, 'ACCEPTED', 'NOT_FOUND')
+        monday_date: Дата понедельника (начало периода)
+        friday_date: Дата пятницы (конец периода)
+
+    Returns:
+        list[tuple]: Список кортежей с данными о возвратах, удовлетворяющих условиям.
+                    Возвращает пустой список, если записи не найдены.
+    """
+    cur.execute('''
+                SELECT *
+                FROM dont_touch.parking_releases pr
+                WHERE pr.status = %s
+                  AND pr.release_date >= %s
+                  AND pr.release_date <= %s
+                ''', (status, monday_date, friday_date))
 
     return cur.fetchall()
