@@ -30,10 +30,10 @@ async def register_user(user):
                     (user.id,)
                 )
                 conn.commit()
-                logging.info(f"New user registered: {user.id}")
+                logging.debug(f"New user registered: {user.id}")
                 return True
             else:
-                logging.info(f"User already exists: {user.id}")
+                logging.debug(f"User already exists: {user.id}")
                 return False
 
     except Exception as e:

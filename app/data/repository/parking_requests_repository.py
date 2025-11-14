@@ -30,3 +30,31 @@ async def insert_request_on_date(cur, db_user_id, request_date):
                 ''', (db_user_id, request_date))
 
     return cur.fetchone()
+
+async def parking_requests_by_week(cur, status, monday_date, friday_date):
+    """
+        Асинхронно получает заявки на парковку за указанную неделю по заданному статусу.
+
+        Выполняет SQL-запрос к таблице parking_requests для выборки всех записей,
+        соответствующих указанному статусу и периоду времени между понедельником и пятницей.
+
+        Args:
+            cur: Курсор базы данных для выполнения SQL-запросов
+            status (str): Статус заявок для фильтрации (например, 'ACCEPTED', 'CANCELED', 'NOT_FOUND')
+            monday_date: Дата понедельника (начало периода)
+            friday_date: Дата пятницы (конец периода)
+
+        Returns:
+            list[tuple]: Список кортежей с данными заявок, удовлетворяющих условиям.
+                        Возвращает пустой список, если заявки не найдены.
+
+        """
+    cur.execute('''
+                SELECT *
+                FROM dont_touch.parking_requests pr
+                WHERE pr.status = %s
+                  AND pr.request_date >= %s
+                    AND pr.request_date <= %s
+                ''', (status, monday_date, friday_date))
+
+    return cur.fetchall()
