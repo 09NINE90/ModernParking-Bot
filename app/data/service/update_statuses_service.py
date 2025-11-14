@@ -16,14 +16,14 @@ async def update_statuses_service():
                             SET status = %s
                             WHERE status = %s
                                 AND release_date < %s
-                            ''', (ParkingReleaseStatus.NOT_FOUND.value, ParkingReleaseStatus.PENDING.value, today))
+                            ''', (ParkingReleaseStatus.NOT_FOUND.value, ParkingReleaseStatus.PENDING.name, today))
 
                 cur.execute('''
                             UPDATE dont_touch.parking_requests
                             SET status = %s
                             WHERE status = %s
                               AND request_date < %s
-                            ''', (ParkingRequestStatus.NOT_FOUND.value, ParkingRequestStatus.PENDING.value, today))
+                            ''', (ParkingRequestStatus.NOT_FOUND.value, ParkingRequestStatus.PENDING.name, today))
     except Exception as e:
         logging.error(f"Error update statuses: {e}")
         return

@@ -12,28 +12,37 @@ class ParkingReleaseStatus(Enum):
     NOT_FOUND = "NOT_FOUND"
     WAITING = "WAITING"
 
+    @property
+    def display_name(self):
+        """Возвращает человеко-читаемое название"""
+        display_mapping = {
+            'PENDING': 'Ожидание распределения мест',
+            'ACCEPTED': 'Место отдано',
+            'CANCELED': 'Отмена освобождения места',
+            'NOT_FOUND': 'Место не отдано',
+            'WAITING': 'Ожидание подтверждения места'
+        }
+        return display_mapping.get(self.value, self.value)
+
 # Модель для таблицы parking_releases
 @dataclass
 class ParkingRelease:
-    id: uuid.UUID
-    user_id: uuid.UUID
-    spot_id: int
-    release_date: date
-    created_at: datetime
+    id: str = None
+    user_id: str = None
+    spot_id: int = None
+    release_date: date = None
+    status: ParkingReleaseStatus = None
+    created_at: datetime = None
     user_id_took: Optional[uuid.UUID] = None
 
     def __post_init__(self):
-        if not isinstance(self.id, uuid.UUID):
-            self.id = uuid.UUID(str(self.id))
-        if self.user_id_took and not isinstance(self.user_id_took, uuid.UUID):
-            self.user_id_took = uuid.UUID(str(self.user_id_took))
-        if not isinstance(self.user_id, uuid.UUID):
-            self.user_id = uuid.UUID(str(self.user_id))
+        if isinstance(self.status, str):
+            self.status = ParkingReleaseStatus(self.status)
 
     @classmethod
-    def create_new(cls, user_id: uuid.UUID, spot_id: int, release_date: date) -> 'ParkingRelease':
+    def create_new(cls, user_id: str, spot_id: int, release_date: date) -> 'ParkingRelease':
         return cls(
-            id=uuid.uuid4(),
+            id=str(uuid.uuid4()),
             user_id=user_id,
             spot_id=spot_id,
             release_date=release_date,

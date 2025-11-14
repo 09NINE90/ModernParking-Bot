@@ -1,11 +1,8 @@
 import logging
-from datetime import date, timedelta
+from datetime import date
 
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-
-from app.bot.constants.weekdays_ru import weekdays_ru
 from app.bot.service.distribution_service import distribute_parking_spots
 from app.bot.keyboard_markup import return_markup, date_list_markup
 from app.data.init_db import get_db_connection

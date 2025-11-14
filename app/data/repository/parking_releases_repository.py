@@ -204,3 +204,75 @@ async def parking_releases_by_week(cur, status, monday_date, friday_date):
                 ''', (status, monday_date, friday_date))
 
     return cur.fetchall()
+
+
+async def current_spots_releases_by_user(cur, user_id, release_date):
+    """
+        Асинхронно получает актуальные освобожденные парковочные места пользователя.
+
+        Выполняет SQL-запрос к таблице parking_releases для выборки всех записей,
+        которые относятся к указанному пользователю и имеют дату освобождения
+        не ранее указанной даты, с определенными статусами.
+
+        Args:
+            cur: Курсор базы данных для выполнения SQL-запросов
+            user_id (str/UUID): Идентификатор пользователя
+            release_date (date): Минимальная дата освобождения для фильтрации
+
+        Returns:
+            list[tuple]: Список кортежей с данными освобожденных мест, где каждый кортеж содержит:
+                        - spot_id (int): ID парковочного места
+                        - status (str): Статус освобождения
+                        - release_date (date): Дата освобождения
+                        Возвращает пустой список, если записи не найдены.
+
+        Notes:
+            - Фильтрует только записи со статусами: 'ACCEPTED', 'PENDING', 'WAITING'
+            - Сортирует результаты по дате освобождения в порядке убывания (сначала самые свежие)
+            - Используется для отображения актуальных освобожденных мест в статистике пользователя
+        """
+    cur.execute('''
+                SELECT pr.spot_id, pr.status, pr.release_date
+                FROM dont_touch.parking_releases pr
+                WHERE pr.user_id = %s
+                  AND pr.release_date >= %s
+                  AND (pr.status = 'ACCEPTED' OR pr.status = 'PENDING' OR pr.status = 'WAITING')
+                ORDER BY release_date DESC
+                ''', (user_id, release_date,))
+
+    return cur.fetchall()
+
+
+async def get_tomorrow_accepted_spot(cur, date):
+    """
+    Асинхронно получает список принятых освобождаемых парковочных мест на указанную дату.
+
+    Выполняет SQL-запрос к таблицам parking_releases и users для выборки информации
+    о парковочных местах, которые будут освобождены в указанную дату и имеют статус 'ACCEPTED'.
+
+    Args:
+        cur: Курсор базы данных для выполнения SQL-запросов
+        date (date): Дата, на которую ищутся освобождаемые места
+
+    Returns:
+        list[tuple]: Список кортежей, где каждый кортеж содержит:
+                    - spot_id (int): Идентификатор парковочного места
+                    - tg_id (int): Telegram ID пользователя, который ЗАБРАЛ место (user_id_took)
+                    Возвращает пустой список, если подходящие записи не найдены.
+
+    Notes:
+        - Используется для уведомлений пользователей о предстоящем освобождении мест
+        - Соединяет таблицы parking_releases и users по user_id_took (пользователь, который взял место)
+        - Фильтрует только записи со статусом 'ACCEPTED'
+        - Возвращает информацию о пользователях, которые фактически получили освобожденные места
+        - Может использоваться для любой даты, несмотря на название 'tomorrow'
+    """
+    cur.execute("""
+                SELECT pr.spot_id, u.tg_id
+                FROM dont_touch.parking_releases pr
+                         JOIN dont_touch.users u ON pr.user_id_took = u.user_id
+                WHERE pr.status = 'ACCEPTED'
+                  AND pr.release_date = %s
+                """, (date,))
+
+    return cur.fetchall()
