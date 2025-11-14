@@ -59,6 +59,8 @@ build:
         --build-arg DB_NAME=$DB_NAME \
         --build-arg BOT_TOKEN=$BOT_TOKEN \
         --build-arg GROUP_ID=$GROUP_ID \
+        --build-arg CHANNEL_ID=$CHANNEL_ID \
+        --build-arg DELAY_MINUTES_CONFIRM_SPOT=$DELAY_MINUTES_CONFIRM_SPOT \
         --tag $REGISTRY/$REGISTRY_PROJECT_NAME:latest \
         --tag $REGISTRY/$REGISTRY_PROJECT_NAME:$WORK_TAG \
         .
