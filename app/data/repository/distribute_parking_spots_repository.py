@@ -119,9 +119,14 @@ async def get_candidates(cur, distribution_date, free_spots):
                          JOIN dont_touch.users u ON prq.user_id = u.user_id
                 WHERE prq.request_date = %s
                   AND prq.status = 'PENDING'
+                  AND NOT EXISTS (SELECT 1
+                                  FROM dont_touch.parking_releases prq2
+                                  WHERE prq2.user_id = prq.user_id
+                                    AND prq2.release_date = %s
+                                    AND prq.status = 'PENDING')
                 ORDER BY u.rating ASC
                 LIMIT %s
-                ''', (distribution_date, len(free_spots)))
+                ''', (distribution_date, distribution_date, len(free_spots)))
 
     return cur.fetchall()
 
