@@ -51,13 +51,13 @@ async def daily_statistics_service(plus_day=0):
                         message_text += f"{emoji} {owner} отдал место <b>№{spot}</b> -> {recipient}\n\n"
 
                     await daily_statistics_notification(tg_chat_id=GROUP_ID, message=message_text,
-                                                        assignment_date=day.date())
+                                                        assignment_date=day.date(), is_pinned=True)
                     await daily_statistics_notification(tg_chat_id=CHANNEL_ID, message=message_text,
                                                         assignment_date=day.date())
                 else:
                     message_text += "👀Трансферов мест пока не было..."
                     await daily_statistics_notification(tg_chat_id=GROUP_ID, message=message_text,
-                                                        assignment_date=day.date())
+                                                        assignment_date=day.date(), is_pinned=True)
                     await daily_statistics_notification(tg_chat_id=CHANNEL_ID, message=message_text,
                                                         assignment_date=day.date())
     except Exception as e:
@@ -104,13 +104,15 @@ async def weekly_statistics_service():
                         message_text += f"{emoji} {owner} отдал место <b>№{spot}</b> -> {recipient}\n\n"
 
                     await weekly_statistics_notification(tg_chat_id=GROUP_ID, message=message_text,
-                                                         monday_date=monday_date.date(), friday_date=friday_date.date())
+                                                         monday_date=monday_date.date(), friday_date=friday_date.date(),
+                                                         is_pinned=True)
                     await weekly_statistics_notification(tg_chat_id=CHANNEL_ID, message=message_text,
                                                          monday_date=monday_date.date(), friday_date=friday_date.date())
                 else:
                     message_text += "👀Трансферов мест пока не было..."
                     await weekly_statistics_notification(tg_chat_id=GROUP_ID, message=message_text,
-                                                         monday_date=monday_date.date(), friday_date=friday_date.date())
+                                                         monday_date=monday_date.date(), friday_date=friday_date.date(),
+                                                         is_pinned=True)
                     await weekly_statistics_notification(tg_chat_id=CHANNEL_ID, message=message_text,
                                                          monday_date=monday_date.date(), friday_date=friday_date.date())
     except Exception as e:
