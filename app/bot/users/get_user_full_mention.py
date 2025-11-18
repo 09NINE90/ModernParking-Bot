@@ -1,6 +1,7 @@
 import logging
 
 from app.bot.config import bot
+from app.log_text import USER_MENTION_ERROR
 
 
 async def get_user_full_mention(user_id: int) -> str:
@@ -28,5 +29,5 @@ async def get_user_full_mention(user_id: int) -> str:
         return f"<a href='tg://user?id={user_id}'>пользователь #{user_id}</a>"
 
     except Exception as e:
-        logging.error(f"Error getting user full mention for {user_id}: {e}")
+        logging.error(USER_MENTION_ERROR.format(user_id, e))
         return f"пользователь #{user_id}"

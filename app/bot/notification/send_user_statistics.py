@@ -2,7 +2,10 @@ import logging
 
 from aiogram.types import CallbackQuery
 
+from app.bot.constants.log_types import LogNotification
 from app.bot.keyboard_markup import return_markup
+from app.bot.notification.log_notification import send_log_notification
+from app.log_text import STATISTICS_SEND_ERROR
 
 
 async def send_user_statistics(query: CallbackQuery, message: str):
@@ -17,5 +20,6 @@ async def send_user_statistics(query: CallbackQuery, message: str):
                                       reply_markup=return_markup)
         return True
     except Exception as e:
-        logging.error(f"Error sending statistics to user: {e}")
+        logging.error(STATISTICS_SEND_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, STATISTICS_SEND_ERROR.format(e))
         return False

@@ -1,6 +1,10 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logging
 
+from app.bot.constants.log_types import LogNotification
+from app.bot.notification.log_notification import send_log_notification
+from app.log_text import SCHEDULED_JOB_CANCEL_ERROR
+
 _scheduler = None
 
 
@@ -17,7 +21,7 @@ def get_scheduler() -> AsyncIOScheduler:
     return _scheduler
 
 
-def cancel_scheduled_cancellation(confirmation_data):
+async def cancel_scheduled_cancellation(confirmation_data):
     """
     Отменяет запланированную автоматическую отмену места
     """
@@ -33,5 +37,6 @@ def cancel_scheduled_cancellation(confirmation_data):
         return False
 
     except Exception as e:
-        logging.error(f"Error cancelling scheduled job: {e}")
+        logging.error(SCHEDULED_JOB_CANCEL_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, SCHEDULED_JOB_CANCEL_ERROR.format(e))
         return False

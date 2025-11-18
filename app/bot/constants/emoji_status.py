@@ -1,3 +1,4 @@
+from app.bot.constants.log_types import LogNotification
 from app.data.models.parking_releases import ParkingReleaseStatus
 from app.data.models.parking_requests import ParkingRequestStatus
 
@@ -13,3 +14,12 @@ async def get_release_emoji_status(status):
         return "✅"
     else:
         return "⌛️"
+
+async def get_log_emoji(log_type: LogNotification):
+    if log_type == LogNotification.ERROR:
+        return '❌'
+    elif log_type == LogNotification.WARN:
+        return '⚠️'
+    elif log_type == LogNotification.INFO:
+        return 'ℹ️'
+    return None

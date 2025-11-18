@@ -1,6 +1,9 @@
 import logging
 
 from app.bot.config import bot
+from app.bot.constants.log_types import LogNotification
+from app.bot.notification.log_notification import send_log_notification
+from app.log_text import WEEKLY_STATISTICS_SEND_ERROR
 
 
 async def weekly_statistics_notification(tg_chat_id: int, message: str, monday_date, friday_date):
@@ -24,6 +27,7 @@ async def weekly_statistics_notification(tg_chat_id: int, message: str, monday_d
         )
         return True
     except Exception as e:
-        logging.error(f"Error sending notification to user {tg_chat_id}: {e}")
+        logging.error(WEEKLY_STATISTICS_SEND_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, WEEKLY_STATISTICS_SEND_ERROR.format(e))
         return False
 
