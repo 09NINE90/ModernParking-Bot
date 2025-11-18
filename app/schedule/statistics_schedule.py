@@ -38,7 +38,7 @@ def setup_scheduler():
         spot_reminder,
         trigger=CronTrigger(
             hour=18,
-            minute=30,
+            minute=00,
         ),
         id='daily_user_reminder'
     )

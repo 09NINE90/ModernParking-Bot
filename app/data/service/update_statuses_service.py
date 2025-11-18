@@ -1,9 +1,12 @@
 import logging
 from datetime import date
 
+from app.bot.constants.log_types import LogNotification
+from app.bot.notification.log_notification import send_log_notification
 from app.data.init_db import get_db_connection
 from app.data.models.parking_releases import ParkingReleaseStatus
 from app.data.models.parking_requests import ParkingRequestStatus
+from app.log_text import STATUS_UPDATE_ERROR
 
 
 async def update_statuses_service():
@@ -25,5 +28,6 @@ async def update_statuses_service():
                               AND request_date < %s
                             ''', (ParkingRequestStatus.NOT_FOUND.value, ParkingRequestStatus.PENDING.name, today))
     except Exception as e:
-        logging.error(f"Error update statuses: {e}")
+        logging.error(STATUS_UPDATE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, STATUS_UPDATE_ERROR.format(e))
         return

@@ -120,10 +120,10 @@ async def get_candidates(cur, distribution_date, free_spots):
                 WHERE prq.request_date = %s
                   AND prq.status = 'PENDING'
                   AND NOT EXISTS (SELECT 1
-                                  FROM dont_touch.parking_releases prq2
-                                  WHERE prq2.user_id = prq.user_id
-                                    AND prq2.release_date = %s
-                                    AND prq.status = 'PENDING')
+                                  FROM dont_touch.parking_releases prl
+                                  WHERE prl.user_id = prq.user_id
+                                    AND prl.release_date = %s
+                                    AND prl.status = 'PENDING')
                 ORDER BY u.rating ASC
                 LIMIT %s
                 ''', (distribution_date, distribution_date, len(free_spots)))

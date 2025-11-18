@@ -1,6 +1,8 @@
 import logging
 
 from app.data.init_db import get_db_connection
+from app.log_text import USER_REGISTRATION_ERROR
+
 
 async def register_user(user):
     """
@@ -37,7 +39,7 @@ async def register_user(user):
                 return False
 
     except Exception as e:
-        logging.error(f"Error registering user {user.id}: {e}")
+        logging.error(USER_REGISTRATION_ERROR.format(user.id, e))
         if conn:
             conn.rollback()
         return False

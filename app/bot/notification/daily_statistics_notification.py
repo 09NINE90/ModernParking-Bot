@@ -2,6 +2,9 @@ import logging
 from datetime import datetime
 
 from app.bot.config import bot
+from app.bot.constants.log_types import LogNotification
+from app.bot.notification.log_notification import send_log_notification
+from app.log_text import USER_NOTIFICATION_ERROR
 
 
 async def daily_statistics_notification(tg_chat_id: int, message: str, assignment_date):
@@ -27,7 +30,8 @@ async def daily_statistics_notification(tg_chat_id: int, message: str, assignmen
         )
         return True
     except Exception as e:
-        logging.error(f"Error sending notification to user {tg_chat_id}: {e}")
+        logging.error(USER_NOTIFICATION_ERROR.format(tg_chat_id, e))
+        await send_log_notification(LogNotification.ERROR, USER_NOTIFICATION_ERROR.format(tg_chat_id, e))
         return False
 
 

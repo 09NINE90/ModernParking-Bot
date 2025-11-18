@@ -11,6 +11,7 @@ from app.bot.parking_states import ParkingStates
 from app.data.repository.parking_releases_repository import insert_spot_on_date, get_user_id_took_by_date_and_spot
 from app.data.repository.parking_spots_repository import get_spot_by_id
 from app.data.repository.users_repository import get_user_id_by_tg_id
+from app.log_text import SPOT_CHECK_ERROR, SPOT_RELEASE_SAVE_ERROR
 
 
 async def select_spot(query: CallbackQuery, state: FSMContext):
@@ -76,7 +77,7 @@ async def is_valid_spot_number(spot_number: str) -> bool:
                 spot = await get_spot_by_id(cur, spot_num)
                 return spot is not None
     except Exception as e:
-        logging.error(f"Error checking spot number {spot_number}: {e}")
+        logging.error(SPOT_CHECK_ERROR.format(spot_number, e))
         return False
 
 
@@ -139,7 +140,7 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
                         f"✅ Отлично! Вы освободили место #{spot_num} на {release_date.strftime('%d.%m.%Y')}",
                         reply_markup=return_markup
                     )
-                    await check_spot_distribution(query, state, db_user_id, spot_num, release_date)
+                    await distribute_parking_spots()
                 else:
                     await query.message.edit_text(
                         f"⚠️ Место #{spot_num} уже освобождено на {release_date.strftime('%d.%m.%Y')}",
@@ -148,46 +149,10 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
 
 
     except Exception as e:
-        logging.error(f"Error saving release for user {tg_id}, spot {spot_number}: {e}")
+        logging.error(SPOT_RELEASE_SAVE_ERROR.format(tg_id, spot_number, e))
         await query.message.edit_text(
             "❌ Произошла ошибка при сохранении. Попробуйте позже.",
             reply_markup=return_markup
         )
 
     await state.clear()
-
-
-async def check_spot_distribution(query: CallbackQuery, state: FSMContext,db_user_id, spot_number, release_date):
-    """
-        Проверяет распределение парковочного места и уведомляет пользователя о статусе.
-
-        Выполняет проверку, было ли назначено освобожденное место другому пользователю,
-        и информирует владельца о текущем статусе распределения.
-
-        Параметры:
-            query: CallbackQuery объект от Telegram
-            db_user_id: UUID пользователя в базе данных
-            spot_number: номер парковочного места
-            release_date: дата проверки распределения
-    """
-    try:
-        await query.answer()
-
-        await distribute_parking_spots()
-
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                user_id_took = await get_user_id_took_by_date_and_spot(cur, db_user_id, spot_number, release_date)
-
-                if not user_id_took:
-                    await query.message.answer(
-                        f"⏳ Пока что Ваше место №{spot_number} на дату {release_date.strftime('%d.%m.%Y')} ни на кого не назначено",
-                        reply_markup=return_markup
-                    )
-
-    except Exception as e:
-        logging.error(f"Error checking spot by date for user {db_user_id}, date {release_date}: {e}")
-        await query.message.answer(
-            "❌ Произошла ошибка при проверке мест. Попробуйте позже.",
-            reply_markup=return_markup
-        )
