@@ -29,3 +29,8 @@ WEEKLY_STATISTICS_SEND_ERROR = "Error sending weekly statistics: {}"
 # SYSTEM & SCHEDULING ERRORS
 SCHEDULED_JOB_CANCEL_ERROR = "Error cancelling scheduled job: {}"
 STATUS_UPDATE_ERROR = "Error update statuses: {}"
+CHAT_ACCESS_ERROR = "There is no access to the chat {}: {}"
+
+# MESSAGE PROCESSING ERRORS
+PINNED_MESSAGE_PROCESSING_WARNING = "Failed to process previous pinned message: {}"
+UNPINNED_MESSAGE_PROCESSING_WARNING = "Failed to process previous unpinned message: {}"
