@@ -46,8 +46,8 @@ build:
   before_script:
     - docker info
     - echo "$REGISTRY_TOKEN" | docker login --username "$REGISTRY_USER_LOGIN" --password-stdin
-    - apk add --no-cache curl bash
-    - VERSION=$(head -n 1 version.txt | tr -d '[:space:]')
+    - apk add --no-cache curl bash jq
+    - VERSION=$(jq -r '.current_version' version.json)
     - export WORK_TAG="$VERSION-$(date +%Y%m%d-%H_%M)"
   script:
     - |
