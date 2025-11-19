@@ -1,6 +1,6 @@
 from apscheduler.triggers.cron import CronTrigger
 
-from app.bot.service.spot_reminder_service import spot_reminder
+from app.bot.service.spots.spot_reminder_service import spot_reminder
 from app.bot.service.statistics_service import daily_statistics_service, weekly_statistics_service
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 

@@ -1,3 +1,6 @@
+from app.data.models.releases.releases_enum import ParkingReleaseStatus
+
+
 async def get_user_spot_by_date(cur, request_date, db_user_id):
     """
     Проверяет, получил ли пользователь место на парковке на указанную дату.
@@ -30,6 +33,7 @@ async def get_user_spot_by_date(cur, request_date, db_user_id):
                 FROM dont_touch.parking_releases
                 WHERE release_date = %s
                   AND user_id_took = %s
+                  AND status = 'ACCEPTED'
                 ''', (request_date, db_user_id))
     return cur.fetchone()
 
@@ -276,3 +280,42 @@ async def get_tomorrow_accepted_spot(cur, date):
                 """, (date,))
 
     return cur.fetchall()
+
+
+async def update_revoke_parking_release(cur, release_id, current_status: ParkingReleaseStatus):
+    cur.execute('''
+                UPDATE dont_touch.parking_releases
+                SET user_id_took = NULL,
+                    status       = %s
+                WHERE id = %s
+                ''', (current_status.name, release_id))
+
+
+async def find_user_releases_for_revoke(cur, db_user_id, date):
+    cur.execute('''
+                SELECT prel.id,
+                       prel.release_date,
+                       prel.status,
+                       prel.spot_id
+                FROM dont_touch.parking_releases prel
+                WHERE prel.user_id = %s
+                  AND prel.release_date >= %s
+                  AND prel.status = 'PENDING'
+                ORDER BY prel.release_date
+                ''', (db_user_id, date,))
+
+    return cur.fetchall()
+
+async def find_release_for_confirm_revoke(cur, db_user_id, release_id):
+    cur.execute('''
+                SELECT prel.id,
+                       prel.release_date,
+                       prel.status,
+                       prel.spot_id
+                FROM dont_touch.parking_releases prel
+                WHERE prel.user_id = %s
+                  AND prel.id = %s
+                LIMIT 1
+                ''', (db_user_id, release_id,))
+
+    return cur.fetchone()

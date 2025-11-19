@@ -2,6 +2,8 @@ import logging
 import random
 from datetime import datetime
 
+import psycopg2
+
 from app.bot.constants.log_types import LogNotification
 from app.bot.dto.spot_confirmation_dto import SpotConfirmationDTO
 from app.bot.notification.log_notification import send_log_notification
@@ -10,13 +12,13 @@ from app.bot.notification.messages.to_user_about_assigned_spot import to_user_ab
 from app.bot.notification.messages.to_user_about_found_spot import to_user_about_found_spot
 from app.bot.notification.notify_user import notify_user
 from app.data.init_db import get_db_connection
-from app.data.models.parking_releases import ParkingReleaseStatus
-from app.data.models.parking_requests import ParkingRequestStatus
+from app.data.models.releases.parking_releases import ParkingReleaseStatus
+from app.data.models.requests.parking_requests import ParkingRequestStatus
 from app.data.repository.distribute_parking_spots_repository import update_parking_releases, \
     update_parking_request_status, \
     update_user_rating, get_release_owner, get_candidates, get_dates_with_availability, get_free_spots
 from app.data.repository.spot_confirmations_repository import insert_row_of_spot_confirmation
-from app.log_text import PARKING_DISTRIBUTION_ERROR
+from app.log_text import PARKING_DISTRIBUTION_ERROR, DATABASE_ERROR
 
 
 async def distribute_parking_spots():
@@ -104,6 +106,9 @@ async def distribute_parking_spots():
                 logging.debug(f"Distributed {distributed_count} parking spots")
                 return distributed_count
 
+    except psycopg2.Error as e:
+        logging.error(DATABASE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
     except Exception as e:
         logging.error(PARKING_DISTRIBUTION_ERROR.format(e))
         await send_log_notification(LogNotification.ERROR, PARKING_DISTRIBUTION_ERROR.format(e))

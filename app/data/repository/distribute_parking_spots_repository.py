@@ -1,5 +1,5 @@
-from app.data.models.parking_releases import ParkingReleaseStatus
-from app.data.models.parking_requests import ParkingRequestStatus
+from app.data.models.releases.parking_releases import ParkingReleaseStatus
+from app.data.models.requests.parking_requests import ParkingRequestStatus
 
 
 async def get_dates_with_availability(cur):
@@ -75,7 +75,7 @@ async def get_free_spots(cur, distribution_date):
                 SELECT id, spot_id
                 FROM dont_touch.parking_releases
                 WHERE release_date = %s
-                  AND user_id_took IS NULL
+                  AND status = 'PENDING'
                 ORDER BY created_at ASC
                 ''', (distribution_date,))
     return cur.fetchall()
