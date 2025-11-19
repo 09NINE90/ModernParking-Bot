@@ -128,7 +128,7 @@ async def confirm_revoke_request(query: CallbackQuery, state: FSMContext, reques
                         await send_log_notification(LogNotification.ERROR,
                                                     USER_MINUS_RATING_ERROR.format(db_user_id, tg_user_id))
 
-                    message_text = (f"Вы успешно отказались от парковочного места <b>№{request.spot_id}</b>"
+                    message_text = (f"Вы успешно отказались от парковочного места <b>№{request.spot_id}</b> "
                                     f"на дату <u>{request.request_date.strftime('%d.%m.%Y')}</u>\n\n"
                                     f"ℹ️ <i>Это место будет предложено кому-нибудь другому</i>")
 

@@ -39,4 +39,4 @@ async def minus_one_user_rating_by_id(cur, db_user_id):
                 RETURNING user_id
                 """, (db_user_id,))
 
-    cur.fetchone()
+    return cur.fetchone()

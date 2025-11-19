@@ -10,7 +10,7 @@ async def get_db_user_id(cur, tg_user_id):
     return user_record[0]
 
 async def minus_one_user_rating(cur, db_user_id):
-    user_id = await minus_one_user_rating_by_id(cur, db_user_id)
-    if not user_id:
+    result = await minus_one_user_rating_by_id(cur, db_user_id)
+    if not result:
         return False
-    return True
+    return result[0] is not None
