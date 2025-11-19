@@ -1,6 +1,6 @@
 from app.bot.constants.log_types import LogNotification
-from app.data.models.parking_releases import ParkingReleaseStatus
-from app.data.models.parking_requests import ParkingRequestStatus
+from app.data.models.releases.parking_releases import ParkingReleaseStatus
+from app.data.models.requests.parking_requests import ParkingRequestStatus
 
 
 async def get_request_emoji_status(status):

@@ -29,3 +29,14 @@ async def get_user_id_by_tg_id(cur, tg_id):
         (tg_id,)
     )
     return cur.fetchone()
+
+
+async def minus_one_user_rating_by_id(cur, db_user_id):
+    cur.execute("""
+                UPDATE dont_touch.users
+                SET rating = rating - 1
+                WHERE user_id = %s
+                RETURNING user_id
+                """, (db_user_id,))
+
+    cur.fetchone()

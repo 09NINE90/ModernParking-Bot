@@ -123,3 +123,41 @@ async def current_spots_request_by_user(cur, user_id, request_date):
                 ''', (user_id, request_date,))
 
     return cur.fetchall()
+
+async def find_user_requests_for_revoke(cur, db_user_id, date):
+    cur.execute('''
+                SELECT pr.id,
+                       pr.request_date,
+                       pr.status,
+                       prel.spot_id
+                FROM dont_touch.parking_requests pr
+                         LEFT JOIN dont_touch.parking_releases prel
+                                   ON pr.user_id = prel.user_id_took
+                                       AND pr.request_date = prel.release_date
+                                       AND prel.status = 'ACCEPTED'
+                WHERE pr.user_id = %s
+                  AND pr.request_date >= %s
+                  AND pr.status IN ('ACCEPTED', 'PENDING')
+                ORDER BY pr.request_date
+                ''', (db_user_id, date,))
+
+    return cur.fetchall()
+
+async def find_request_for_confirm_revoke(cur, db_user_id, request_id):
+    cur.execute('''
+                SELECT pr.id,
+                       pr.request_date,
+                       pr.status,
+                       prel.spot_id,
+                       prel.id
+                FROM dont_touch.parking_requests pr
+                         LEFT JOIN dont_touch.parking_releases prel
+                                   ON pr.user_id = prel.user_id_took
+                                       AND pr.request_date = prel.release_date
+                                       AND prel.status = 'ACCEPTED'
+                WHERE pr.user_id = %s
+                  AND pr.id = %s
+                LIMIT 1
+                ''', (db_user_id, request_id,))
+
+    return cur.fetchone()

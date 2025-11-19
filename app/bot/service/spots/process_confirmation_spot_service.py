@@ -1,18 +1,20 @@
 import logging
 
+import psycopg2
+
 from app.bot.constants.log_types import LogNotification
 from app.bot.notification.log_notification import send_log_notification
 from app.bot.notification.messages.to_owner_message import to_owner_message
 from app.bot.notification.notify_user import notify_user
 from app.data.init_db import get_db_connection
-from app.data.models.parking_releases import ParkingReleaseStatus
-from app.data.models.parking_requests import ParkingRequestStatus
+from app.data.models.releases.parking_releases import ParkingReleaseStatus
+from app.data.models.requests.parking_requests import ParkingRequestStatus
 from app.data.repository.distribute_parking_spots_repository import (
     update_parking_releases, update_parking_request_status,
     update_user_rating, get_release_owner
 )
 from app.data.repository.spot_confirmations_repository import deactivate_spot_confirmations_by_user
-from app.log_text import SPOT_CONFIRMATION_PROCESSING_ERROR, SPOT_CANCEL_PROCESSING_ERROR
+from app.log_text import SPOT_CONFIRMATION_PROCESSING_ERROR, SPOT_CANCEL_PROCESSING_ERROR, DATABASE_ERROR
 
 
 async def process_spot_confirmation(confirmation_data) -> bool:
@@ -38,6 +40,9 @@ async def process_spot_confirmation(confirmation_data) -> bool:
                 conn.commit()
                 return True
 
+    except psycopg2.Error as e:
+        logging.error(DATABASE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
     except Exception as e:
         logging.error(SPOT_CONFIRMATION_PROCESSING_ERROR.format(e))
         await send_log_notification(LogNotification.ERROR, SPOT_CONFIRMATION_PROCESSING_ERROR.format(e))
@@ -59,6 +64,10 @@ async def process_spot_cancel(confirmation_data) -> bool:
                 conn.commit()
                 return True
 
+    except psycopg2.Error as e:
+        logging.error(DATABASE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
+        return False
     except Exception as e:
         logging.error(SPOT_CANCEL_PROCESSING_ERROR.format(e))
         await send_log_notification(LogNotification.ERROR, SPOT_CANCEL_PROCESSING_ERROR.format(e))

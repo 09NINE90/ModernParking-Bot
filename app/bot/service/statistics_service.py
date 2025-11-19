@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
+import psycopg2
 from aiogram.types import CallbackQuery
 
 from app.bot.config import GROUP_ID, CHANNEL_ID
@@ -11,18 +12,19 @@ from app.bot.notification.daily_statistics_notification import daily_statistics_
 from app.bot.notification.log_notification import send_log_notification
 from app.bot.notification.send_user_statistics import send_user_statistics
 from app.bot.notification.weeky_statistics_notification import weekly_statistics_notification
+from app.bot.service.user_service import get_db_user_id
 from app.bot.users.get_user_full_mention import get_user_full_mention
 from app.data.init_db import get_db_connection
-from app.data.models.parking_releases import ParkingReleaseStatus, ParkingRelease
-from app.data.models.parking_requests import ParkingRequestStatus, ParkingRequest
+from app.data.models.releases.parking_releases import ParkingReleaseStatus, ParkingRelease
+from app.data.models.requests.parking_requests import ParkingRequestStatus, ParkingRequest
 from app.data.models.parking_transfers import ParkingTransfer
 from app.data.repository.parking_releases_repository import free_parking_releases_by_date, \
     parking_releases_by_week, current_spots_releases_by_user
 from app.data.repository.parking_requests_repository import parking_requests_by_week, \
     all_parking_requests_by_status_and_user, current_spots_request_by_user
 from app.data.repository.statistics_repository import get_parking_transfers_by_date, get_parking_transfers_by_week
-from app.data.repository.users_repository import get_user_id_by_tg_id
-from app.log_text import USER_STATISTICS_ERROR, WEEKLY_STATISTICS_SERVICE_ERROR, DAILY_STATISTICS_SERVICE_ERROR
+from app.log_text import USER_STATISTICS_ERROR, WEEKLY_STATISTICS_SERVICE_ERROR, DAILY_STATISTICS_SERVICE_ERROR, \
+    DB_USER_ID_GET_ERROR, DATABASE_ERROR
 
 
 async def daily_statistics_service(plus_day=0):
@@ -60,6 +62,9 @@ async def daily_statistics_service(plus_day=0):
                                                         assignment_date=day.date(), is_pinned=True)
                     await daily_statistics_notification(tg_chat_id=CHANNEL_ID, message=message_text,
                                                         assignment_date=day.date())
+    except psycopg2.Error as e:
+        logging.error(DATABASE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
     except Exception as e:
         logging.error(DAILY_STATISTICS_SERVICE_ERROR.format(e))
         await send_log_notification(LogNotification.ERROR, DAILY_STATISTICS_SERVICE_ERROR.format(e))
@@ -115,6 +120,9 @@ async def weekly_statistics_service():
                                                          is_pinned=True)
                     await weekly_statistics_notification(tg_chat_id=CHANNEL_ID, message=message_text,
                                                          monday_date=monday_date.date(), friday_date=friday_date.date())
+    except psycopg2.Error as e:
+        logging.error(DATABASE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
     except Exception as e:
         logging.error(WEEKLY_STATISTICS_SERVICE_ERROR.format(e))
         await send_log_notification(LogNotification.ERROR, WEEKLY_STATISTICS_SERVICE_ERROR.format(e))
@@ -126,17 +134,16 @@ async def my_statistics(query: CallbackQuery):
     """
     try:
         today = datetime.now()
-        user_tg_id = query.from_user.id
+        tg_user_id = query.from_user.id
 
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                user_record = await get_user_id_by_tg_id(cur, user_tg_id)
+                db_user_id = await get_db_user_id(cur, tg_user_id)
 
-                if not user_record:
-                    await query.message.answer("❌ Ошибка: пользователь не найден")
+                if not db_user_id:
+                    logging.error(DB_USER_ID_GET_ERROR.format(tg_user_id))
+                    await send_log_notification(LogNotification.ERROR, DB_USER_ID_GET_ERROR.format(tg_user_id))
                     return None
-
-                db_user_id = user_record[0]
 
                 not_found_spots = await all_parking_requests_by_status_and_user(cur, ParkingRequestStatus.NOT_FOUND.name,
                                                                                 db_user_id)
@@ -172,7 +179,7 @@ async def my_statistics(query: CallbackQuery):
                         message_text += (f"📅 Дата: {current_spot.request_date.strftime('%d.%m.%Y')}\n"
                                          f"{emoji_status} Статус: {current_spot.status.display_name}\n\n")
                 else:
-                    message_text += "\nУ вас пока что нет актуальных запросов на парковочные места"
+                    message_text += "\nУ вас пока что нет актуальных запросов на парковочные места\n"
 
                 if len(current_spots_releases) > 0:
                     message_text += "\n<b>Ваши актуальные освобожденные парковочные места:</b>\n"
@@ -182,9 +189,12 @@ async def my_statistics(query: CallbackQuery):
                                          f"📍 Место: №{current_spot.spot_id}\n"
                                          f"{emoji_status} Статус: {current_spot.status.display_name}\n\n")
                 else:
-                    message_text += "\nУ вас пока что нет актуальных освобожденных парковочных мест"
+                    message_text += "\nУ вас пока что нет актуальных освобожденных парковочных мест\n"
 
                 await send_user_statistics(query, message_text)
+    except psycopg2.Error as e:
+        logging.error(DATABASE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
     except Exception as e:
         logging.error(USER_STATISTICS_ERROR.format(e))
         await send_log_notification(LogNotification.ERROR, USER_STATISTICS_ERROR.format(e))

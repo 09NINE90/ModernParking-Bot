@@ -18,6 +18,7 @@ USER_REGISTRATION_ERROR = "Error registering user {}: {}"
 USER_MENTION_ERROR = "Error getting user full mention for {}: {}"
 USER_NOTIFICATION_ERROR = "Error sending notification to user {}: {}"
 USER_STATISTICS_ERROR = "Error in getting user statistics: {}"
+USER_MINUS_RATING_ERROR = "Error minus rating for user {}, tg id: {}"
 
 # STATISTICS ERRORS
 STATISTICS_CHECK_ERROR = "Error checking statistics: {}"
@@ -34,3 +35,12 @@ CHAT_ACCESS_ERROR = "There is no access to the chat {}: {}"
 # MESSAGE PROCESSING ERRORS
 PINNED_MESSAGE_PROCESSING_WARNING = "Failed to process previous pinned message: {}"
 UNPINNED_MESSAGE_PROCESSING_WARNING = "Failed to process previous unpinned message: {}"
+
+# USER RELATED ERRORS
+DB_USER_ID_GET_ERROR = "Error getting DB user id from tg_id: {}"
+
+# DATABASE ERRORS
+DATABASE_ERROR = "Database error: {}"
+
+# UNEXPECTED ERRORS
+UNEXPECTED_ERROR = "Unexpected error: {}"
