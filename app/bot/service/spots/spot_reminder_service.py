@@ -8,7 +8,7 @@ from app.bot.notification.log_notification import send_log_notification
 from app.bot.notification.messages.to_remind_user_of_spot import to_remind_user_of_spot
 from app.bot.notification.notify_user import notify_user
 from app.data.init_db import get_db_connection
-from app.data.models.parking_reminder import ParkingReminder
+from app.data.models.parking_reminder_dto import ParkingReminder
 from app.data.repository.parking_releases_repository import get_tomorrow_accepted_spot
 from app.log_text import SPOT_REMINDER_ERROR, DATABASE_ERROR
 

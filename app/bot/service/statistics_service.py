@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import psycopg2
 from aiogram.types import CallbackQuery
 
-from app.bot.config import GROUP_ID, CHANNEL_ID
+from app.bot.config import GROUP_ID, LOGS_CHANNEL_ID
 from app.bot.constants.car_emojis import get_random_car_emoji
 from app.bot.constants.emoji_status import get_request_emoji_status, get_release_emoji_status
 from app.bot.constants.log_types import LogNotification
@@ -17,7 +17,7 @@ from app.bot.users.get_user_full_mention import get_user_full_mention
 from app.data.init_db import get_db_connection
 from app.data.models.releases.parking_releases import ParkingReleaseStatus, ParkingRelease
 from app.data.models.requests.parking_requests import ParkingRequestStatus, ParkingRequest
-from app.data.models.parking_transfers import ParkingTransfer
+from app.data.models.parking_transfers_dto import ParkingTransfer
 from app.data.repository.parking_releases_repository import free_parking_releases_by_date, \
     parking_releases_by_week, current_spots_releases_by_user
 from app.data.repository.parking_requests_repository import parking_requests_by_week, \
@@ -54,13 +54,13 @@ async def daily_statistics_service(plus_day=0):
 
                     await daily_statistics_notification(tg_chat_id=GROUP_ID, message=message_text,
                                                         assignment_date=day.date(), is_pinned=True)
-                    await daily_statistics_notification(tg_chat_id=CHANNEL_ID, message=message_text,
+                    await daily_statistics_notification(tg_chat_id=LOGS_CHANNEL_ID, message=message_text,
                                                         assignment_date=day.date())
                 else:
                     message_text += "👀Трансферов мест пока не было..."
                     await daily_statistics_notification(tg_chat_id=GROUP_ID, message=message_text,
                                                         assignment_date=day.date(), is_pinned=True)
-                    await daily_statistics_notification(tg_chat_id=CHANNEL_ID, message=message_text,
+                    await daily_statistics_notification(tg_chat_id=LOGS_CHANNEL_ID, message=message_text,
                                                         assignment_date=day.date())
     except psycopg2.Error as e:
         logging.error(DATABASE_ERROR.format(e))
@@ -111,14 +111,14 @@ async def weekly_statistics_service():
                     await weekly_statistics_notification(tg_chat_id=GROUP_ID, message=message_text,
                                                          monday_date=monday_date.date(), friday_date=friday_date.date(),
                                                          is_pinned=True)
-                    await weekly_statistics_notification(tg_chat_id=CHANNEL_ID, message=message_text,
+                    await weekly_statistics_notification(tg_chat_id=LOGS_CHANNEL_ID, message=message_text,
                                                          monday_date=monday_date.date(), friday_date=friday_date.date())
                 else:
                     message_text += "👀Трансферов мест пока не было..."
                     await weekly_statistics_notification(tg_chat_id=GROUP_ID, message=message_text,
                                                          monday_date=monday_date.date(), friday_date=friday_date.date(),
                                                          is_pinned=True)
-                    await weekly_statistics_notification(tg_chat_id=CHANNEL_ID, message=message_text,
+                    await weekly_statistics_notification(tg_chat_id=LOGS_CHANNEL_ID, message=message_text,
                                                          monday_date=monday_date.date(), friday_date=friday_date.date())
     except psycopg2.Error as e:
         logging.error(DATABASE_ERROR.format(e))

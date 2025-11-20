@@ -3,6 +3,7 @@ from aiogram.types import CallbackQuery
 
 from app.bot.callbacks.back_to_main_menu import back_to_main_menu
 from app.bot.callbacks.handle_cancel_spot import handle_cancel_spot
+from app.bot.callbacks.handle_feedback import handle_feedback
 from app.bot.callbacks.handle_my_statistics import handle_my_statistics
 from app.bot.callbacks.revoke_releases.handle_confirm_revoke_release import handle_confirm_revoke_release
 from app.bot.callbacks.revoke_releases.handle_confirmation_revoke_release import handle_confirmation_revoke_release
@@ -62,6 +63,10 @@ async def handle_callback(query: CallbackQuery, state: FSMContext):
             await state.clear()
             request_id = data.replace("confirm_revoke_request_", "")
             await handle_confirm_revoke_request(query, state, request_id)
+
+        case str() if data.startswith("feedback_"):
+            feedback_type = data.replace("feedback_", "")
+            await handle_feedback(query, state, feedback_type)
 
         case "back_to_main":
             await state.clear()

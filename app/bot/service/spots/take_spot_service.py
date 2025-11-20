@@ -4,7 +4,7 @@ import psycopg2
 from aiogram.types import CallbackQuery
 
 from app.bot.constants.log_types import LogNotification
-from app.bot.dto.spot_confirmation_dto import SpotConfirmationDTO
+from app.data.models.spot_confirmation_dto import SpotConfirmationDTO
 from app.bot.keyboard_markup import return_markup
 from app.bot.notification.log_notification import send_log_notification
 from app.bot.service.user_service import get_db_user_id

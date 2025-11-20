@@ -27,6 +27,15 @@ back_to_revoke_release_keyboard = [
 
 back_to_revoke_release_markup = InlineKeyboardMarkup(inline_keyboard=back_to_revoke_release_keyboard)
 
+feedback_keyboard = [
+    [InlineKeyboardButton(text="❗️ Сообщить об ошибке", callback_data="feedback_error")],
+    [InlineKeyboardButton(text="💡 Предложить идею", callback_data="feedback_idea")],
+    [InlineKeyboardButton(text="✍️ Оставить отзыв", callback_data="feedback_feedback")],
+    [InlineKeyboardButton(text="Главное меню", callback_data="back_to_main")]
+]
+
+feedback_markup = InlineKeyboardMarkup(inline_keyboard=feedback_keyboard)
+
 main_keyboard = [
     [InlineKeyboardButton(text="📊 Моя статистика", callback_data="my_statistics")],
     [

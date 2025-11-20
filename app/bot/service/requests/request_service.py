@@ -1,8 +1,8 @@
 from datetime import date
 
 from app.data.models.requests.requests_enum import ParkingRequestStatus
-from app.data.models.requests.revoke_requests import RevokeRequest
-from app.data.repository.distribute_parking_spots_repository import update_parking_request_status
+from app.data.models.requests.revoke_requests_dto import RevokeRequest
+from app.data.repository.parking_requests_repository import update_parking_request_status
 from app.data.repository.parking_requests_repository import find_user_requests_for_revoke, \
     find_request_for_confirm_revoke
 
@@ -33,5 +33,5 @@ async def get_request_for_confirm_revoke(cur, request_id, db_user_id):
     )
 
 
-async def update_request_status(cur: object, request_id: object, status):
+async def update_request_status(cur, request_id, status):
     await update_parking_request_status(cur, request_id, status)

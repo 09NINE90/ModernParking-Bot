@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from datetime import datetime, date
+from datetime import datetime
 from typing import Optional
 import uuid
 
-from app.bot.dto.spot_confirmation_dto import SpotConfirmationDTO
+from app.data.models.spot_confirmation_dto import SpotConfirmationDTO
 
 
 @dataclass

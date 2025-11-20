@@ -3,7 +3,7 @@ from datetime import datetime
 
 from aiogram.enums import ParseMode
 
-from app.bot.config import CHANNEL_ID, bot
+from app.bot.config import LOGS_CHANNEL_ID, bot
 from app.bot.constants.emoji_status import get_log_emoji
 from app.bot.constants.log_types import LogNotification
 
@@ -21,7 +21,7 @@ async def send_log_notification(log_type: LogNotification, message):
         )
 
         await bot.send_message(
-            chat_id=CHANNEL_ID,
+            chat_id=LOGS_CHANNEL_ID,
             text=message_text,
             parse_mode=ParseMode.MARKDOWN
         )

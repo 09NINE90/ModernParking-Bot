@@ -13,11 +13,11 @@ from app.bot.service.distribution_service import distribute_parking_spots
 from app.bot.service.release.release_service import revoke_parking_release
 from app.bot.service.requests.request_service import get_user_requests_for_revoke, get_request_for_confirm_revoke, \
     update_request_status
-from app.bot.service.user_service import get_db_user_id, minus_one_user_rating
+from app.bot.service.user_service import get_db_user_id, decrement_user_rating_of_1
 from app.data.init_db import get_db_connection
 from app.data.models.releases.releases_enum import ParkingReleaseStatus
 from app.data.models.requests.requests_enum import ParkingRequestStatus
-from app.data.models.requests.revoke_requests import RevokeRequest
+from app.data.models.requests.revoke_requests_dto import RevokeRequest
 from app.log_text import DB_USER_ID_GET_ERROR, DATABASE_ERROR, UNEXPECTED_ERROR, USER_MINUS_RATING_ERROR
 
 
@@ -122,7 +122,7 @@ async def confirm_revoke_request(query: CallbackQuery, state: FSMContext, reques
                 else:
                     await revoke_parking_release(cur, request.release_id, ParkingReleaseStatus.PENDING)
                     await update_request_status(cur, request_id, ParkingRequestStatus.CANCELED)
-                    is_rating_change = await minus_one_user_rating(cur, db_user_id)
+                    is_rating_change = await decrement_user_rating_of_1(cur, db_user_id)
                     if not is_rating_change:
                         logging.error(USER_MINUS_RATING_ERROR.format(db_user_id, tg_user_id))
                         await send_log_notification(LogNotification.ERROR,
