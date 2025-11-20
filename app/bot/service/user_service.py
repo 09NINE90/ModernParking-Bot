@@ -1,4 +1,4 @@
-from app.data.repository.users_repository import get_user_id_by_tg_id, minus_one_user_rating_by_id
+from app.data.repository.users_repository import get_user_id_by_tg_id, decrement_user_rating
 
 
 async def get_db_user_id(cur, tg_user_id):
@@ -9,8 +9,8 @@ async def get_db_user_id(cur, tg_user_id):
 
     return user_record[0]
 
-async def minus_one_user_rating(cur, db_user_id):
-    result = await minus_one_user_rating_by_id(cur, db_user_id)
+async def decrement_user_rating_of_1(cur, db_user_id):
+    result = await decrement_user_rating(cur, db_user_id)
     if not result:
         return False
     return result[0] is not None

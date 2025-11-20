@@ -1,7 +1,7 @@
 from datetime import date
 
 from app.data.models.releases.releases_enum import ParkingReleaseStatus
-from app.data.models.releases.revoke_releases import RevokeRelease
+from app.data.models.releases.revoke_releases_dto import RevokeRelease
 from app.data.repository.parking_releases_repository import update_revoke_parking_release, \
     find_user_releases_for_revoke, find_release_for_confirm_revoke
 

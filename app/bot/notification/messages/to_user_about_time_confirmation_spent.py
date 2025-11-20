@@ -1,4 +1,4 @@
-from app.bot.dto.spot_confirmation_dto import SpotConfirmationDTO
+from app.data.models.spot_confirmation_dto import SpotConfirmationDTO
 from app.bot.users.get_user_full_mention import get_user_full_mention
 
 

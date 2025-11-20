@@ -15,7 +15,7 @@ from app.bot.service.release.release_service import get_user_releases_for_revoke
 from app.bot.service.user_service import get_db_user_id
 from app.data.init_db import get_db_connection
 from app.data.models.releases.releases_enum import ParkingReleaseStatus
-from app.data.models.releases.revoke_releases import RevokeRelease
+from app.data.models.releases.revoke_releases_dto import RevokeRelease
 from app.log_text import DB_USER_ID_GET_ERROR, DATABASE_ERROR, UNEXPECTED_ERROR
 
 

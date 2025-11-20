@@ -35,9 +35,12 @@ CHAT_ACCESS_ERROR = "There is no access to the chat {}: {}"
 # MESSAGE PROCESSING ERRORS
 PINNED_MESSAGE_PROCESSING_WARNING = "Failed to process previous pinned message: {}"
 UNPINNED_MESSAGE_PROCESSING_WARNING = "Failed to process previous unpinned message: {}"
+FEEDBACK_MESSAGE_PROCESSING_ERROR = "Failed to process feedback message: {}"
 
 # USER RELATED ERRORS
 DB_USER_ID_GET_ERROR = "Error getting DB user id from tg_id: {}"
+FEEDBACK_SEND_ERROR = "Error sending feedback: {}"
+FEEDBACK_HANDLE_ERROR = "Error in handle_feedback: {}"
 
 # DATABASE ERRORS
 DATABASE_ERROR = "Database error: {}"

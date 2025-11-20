@@ -1,5 +1,5 @@
 from app.bot.config import DELAY_MINUTES_CONFIRM_SPOT
-from app.bot.dto.spot_confirmation_dto import SpotConfirmationDTO
+from app.data.models.spot_confirmation_dto import SpotConfirmationDTO
 from app.bot.users.get_user_full_mention import get_user_full_mention
 from app.schedule.scheduler_manager import schedule_spot_cancellation
 
