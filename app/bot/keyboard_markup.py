@@ -57,6 +57,13 @@ found_spot_keyboard = [
 found_spot_markup = InlineKeyboardMarkup(inline_keyboard=found_spot_keyboard)
 
 
+reminder_spot_confirmation_keyboard = [
+    [InlineKeyboardButton(text="✅ Да, я займу", callback_data="take_spot_by_reminder")],
+    [InlineKeyboardButton(text="❌ Отклонить место", callback_data="cancel_spot_by_reminder")]
+]
+
+reminder_spot_confirmation_markup = InlineKeyboardMarkup(inline_keyboard=reminder_spot_confirmation_keyboard)
+
 def date_list_markup(count_days: int = 7, callback_name: str = '') -> InlineKeyboardMarkup:
     today = date.today()
     builder = InlineKeyboardBuilder()
