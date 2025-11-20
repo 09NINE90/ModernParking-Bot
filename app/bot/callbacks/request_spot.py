@@ -1,18 +1,19 @@
 import logging
-from datetime import date, timedelta
+from datetime import date
 
+import psycopg2
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from app.bot.constants.weekdays_ru import weekdays_ru
+from app.bot.constants.log_types import LogNotification
+from app.bot.notification.log_notification import send_log_notification
 from app.bot.service.distribution_service import distribute_parking_spots
 from app.bot.keyboard_markup import return_markup, date_list_markup
+from app.bot.service.user_service import get_db_user_id
 from app.data.init_db import get_db_connection
-from app.data.repository.parking_releases_repository import get_user_spot_by_date, \
-    get_spot_id_by_user_id_and_request_date
+from app.data.repository.parking_releases_repository import get_user_spot_by_date
 from app.data.repository.parking_requests_repository import insert_request_on_date
-from app.data.repository.users_repository import get_user_id_by_tg_id
+from app.log_text import SPOT_REQUEST_SAVE_ERROR, DB_USER_ID_GET_ERROR, DATABASE_ERROR
 
 
 async def show_request_calendar(query: CallbackQuery, state: FSMContext):
@@ -41,19 +42,18 @@ async def process_spot_request(query: CallbackQuery, date_str, state: FSMContext
             query: CallbackQuery объект от Telegram
             date_str: строка с датой в формате ISO
     """
-    tg_id = query.from_user.id
+    tg_user_id = query.from_user.id
     request_date = date.fromisoformat(date_str)
 
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                user_record = await get_user_id_by_tg_id(cur, tg_id)
+                db_user_id = await get_db_user_id(cur, tg_user_id)
 
-                if not user_record:
-                    await query.message.edit_text("❌ Ошибка: пользователь не найден")
+                if not db_user_id:
+                    logging.error(DB_USER_ID_GET_ERROR.format(tg_user_id))
+                    await send_log_notification(LogNotification.ERROR, DB_USER_ID_GET_ERROR.format(tg_user_id))
                     return None
-
-                db_user_id = user_record[0]
 
                 user_spot = await get_user_spot_by_date(cur, request_date, db_user_id)
 
@@ -72,54 +72,20 @@ async def process_spot_request(query: CallbackQuery, date_str, state: FSMContext
                         f"✅ Отлично! Вы заняли место в очереди на парковочное место на {request_date.strftime('%d.%m.%Y')}",
                         reply_markup=return_markup
                     )
-                    await check_spot_distribution(query, state, db_user_id, request_date)
+                    await distribute_parking_spots()
                 else:
                     await query.message.edit_text(
                         f"⚠️ Вы уже заняли место в очереди на парковочное место на {request_date.strftime('%d.%m.%Y')}",
                         reply_markup=return_markup
                     )
 
+    except psycopg2.Error as e:
+        logging.error(DATABASE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
     except Exception as e:
-        logging.error(f"Error saving spot request for user {tg_id}, date {request_date}: {e}")
+        logging.error(SPOT_REQUEST_SAVE_ERROR.format(tg_user_id, request_date, e))
+        await send_log_notification(LogNotification.ERROR, SPOT_REQUEST_SAVE_ERROR.format(tg_user_id, request_date, e))
         await query.message.edit_text(
             "❌ Произошла ошибка при сохранении. Попробуйте позже.",
             reply_markup=return_markup
         )
-
-
-async def check_spot_distribution(query: CallbackQuery, state: FSMContext, db_user_id, request_date):
-    """
-        Проверяет распределение парковочных мест для пользователя после создания запроса.
-
-        Выполняет немедленную проверку доступности мест и уведомляет пользователя о результате.
-
-        Параметры:
-            query: CallbackQuery объект от Telegram
-            db_user_id: UUID пользователя в базе данных
-            request_date: дата проверки распределения
-    """
-    try:
-        await query.answer()
-
-        await distribute_parking_spots()
-
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                spot_id = await get_spot_id_by_user_id_and_request_date(cur, db_user_id, request_date)
-                if not spot_id:
-                    await query.message.answer(
-                        "😔 Пока что не найдено свободных мест на эту дату\n"
-                        "Как только место появится, я обязательно сообщу",
-                        reply_markup=return_markup
-                    )
-
-                conn.commit()
-    except Exception as e:
-        logging.error(f"Error checking spot by date for user {db_user_id}, date {request_date}: {e}")
-        await query.message.answer(
-            "❌ Произошла ошибка при поиске мест. Попробуйте позже.",
-            reply_markup=return_markup
-        )
-        return []
-    finally:
-        return []

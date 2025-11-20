@@ -1,5 +1,6 @@
 from apscheduler.triggers.cron import CronTrigger
 
+from app.bot.service.spots.spot_reminder_service import spot_reminder
 from app.bot.service.statistics_service import daily_statistics_service, weekly_statistics_service
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -20,7 +21,7 @@ def setup_scheduler():
         id='daily_morning_statistics'
     )
 
-    # Ежедневно в 18:30 ТОЛЬКО по будням (понедельник-пятница)
+    # Ежедневно в 18:30 ТОЛЬКО по будням (понедельник-четверг)
     scheduler.add_job(
         daily_statistics_service,
         trigger=CronTrigger(
@@ -30,6 +31,16 @@ def setup_scheduler():
         ),
         args=[1],
         id='daily_evening_statistics'
+    )
+
+    # Ежедневно в 18:30
+    scheduler.add_job(
+        spot_reminder,
+        trigger=CronTrigger(
+            hour=18,
+            minute=00,
+        ),
+        id='daily_user_reminder'
     )
 
     # Еженедельно в пятницу в 18:30

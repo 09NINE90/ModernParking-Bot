@@ -2,16 +2,24 @@ import logging
 import random
 from datetime import datetime
 
-from app.bot.dto.spot_confirmation_dto import SpotConfirmationDTO
-from app.bot.notification.notify_owner_about_taken_spot import notify_owner_about_taken_spot
-from app.bot.notification.notify_user_about_assigned_spot import notify_user_about_assigned_spot
-from app.bot.notification.notify_user_about_found_spot import notify_user_about_found_spot
+import psycopg2
+
+from app.bot.constants.log_types import LogNotification
+from app.data.models.spot_confirmation_dto import SpotConfirmationDTO
+from app.bot.notification.log_notification import send_log_notification
+from app.bot.notification.messages.to_owner_message import to_owner_message
+from app.bot.notification.messages.to_user_about_assigned_spot import to_user_about_assigned_spot
+from app.bot.notification.messages.to_user_about_found_spot import to_user_about_found_spot
+from app.bot.notification.notify_user import notify_user
+from app.bot.service.requests.request_service import update_request_status
 from app.data.init_db import get_db_connection
-from app.data.models.parking_releases import ParkingReleaseStatus
-from app.data.models.parking_requests import ParkingRequestStatus
-from app.data.repository.distribute_parking_spots_repository import update_parking_releases, \
-    update_parking_request_status, \
-    update_user_rating, get_release_owner, get_candidates, get_dates_with_availability, get_free_spots
+from app.data.models.releases.parking_releases import ParkingReleaseStatus
+from app.data.models.requests.parking_requests import ParkingRequestStatus
+from app.data.repository.distribute_parking_spots_repository import  get_candidates, get_dates_with_availability
+from app.data.repository.parking_releases_repository import update_parking_releases, get_release_owner, get_free_spots
+from app.data.repository.spot_confirmations_repository import insert_row_of_spot_confirmation
+from app.data.repository.users_repository import increment_user_rating
+from app.log_text import PARKING_DISTRIBUTION_ERROR, DATABASE_ERROR
 
 
 async def distribute_parking_spots():
@@ -42,7 +50,6 @@ async def distribute_parking_spots():
                         continue
 
                     candidates = await get_candidates(cur, distribution_date, free_spots)
-
                     if not candidates:
                         continue
 
@@ -57,13 +64,16 @@ async def distribute_parking_spots():
                         if (distribution_date == today_date) and (datetime_now > today_9am):
 
                             await update_parking_releases(cur, user_id, release_id, ParkingReleaseStatus.WAITING)
-                            await update_parking_request_status(cur, request_id,
+                            await update_request_status(cur, request_id,
                                                                 ParkingRequestStatus.WAITING_CONFIRMATION)
 
                             spot_confirmation_data = SpotConfirmationDTO(
                                 str(user_id), tg_id, spot_id, distribution_date, release_id, request_id
                             )
-                            await notify_user_about_found_spot(spot_confirmation_data)
+                            await insert_row_of_spot_confirmation(cur, user_id, release_id, request_id)
+
+                            message_text = await to_user_about_found_spot(spot_confirmation_data)
+                            await notify_user(tg_id, message_text, True)
 
                         else:
                             release_owner = await get_release_owner(cur, release_id)
@@ -78,23 +88,29 @@ async def distribute_parking_spots():
 
                             await update_parking_releases(cur, user_id, release_id, ParkingReleaseStatus.ACCEPTED)
 
-                            await update_parking_request_status(cur, request_id, ParkingRequestStatus.ACCEPTED)
+                            await update_request_status(cur, request_id, ParkingRequestStatus.ACCEPTED)
 
-                            await update_user_rating(cur, user_id)
+                            await increment_user_rating(cur, user_id)
 
-                            await notify_user_about_assigned_spot(tg_id, spot_id, distribution_date)
+                            message_text = await to_user_about_assigned_spot(tg_id, spot_id, distribution_date)
+                            await notify_user(tg_id, message_text)
                             distributed_count += 1
 
                 conn.commit()
                 for notification in release_notifications:
-                    await notify_owner_about_taken_spot(
+                    message_text = await to_owner_message(
                         notification['tg_id'],
                         notification['spot_number'],
                         notification['date']
                     )
+                    await notify_user(notification['tg_id'], message_text)
                 logging.debug(f"Distributed {distributed_count} parking spots")
                 return distributed_count
 
+    except psycopg2.Error as e:
+        logging.error(DATABASE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
     except Exception as e:
-        logging.error(f"Error distributing parking spots: {e}")
+        logging.error(PARKING_DISTRIBUTION_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, PARKING_DISTRIBUTION_ERROR.format(e))
         return 0

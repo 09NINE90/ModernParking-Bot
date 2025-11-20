@@ -6,10 +6,10 @@ from typing import Optional
 @dataclass
 class SpotConfirmationDTO:
     """DTO для передачи данных о подтверждении парковочного места"""
-    db_user_id: str
-    tg_user_id: int
-    spot_number: int
-    assignment_date: date
+    db_user_id: str = None
+    tg_user_id: int = None
+    spot_number: int = None
+    assignment_date: date = None
     release_id: Optional[str] = None
     request_id: Optional[str] = None
 

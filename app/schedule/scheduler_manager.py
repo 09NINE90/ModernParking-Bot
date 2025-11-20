@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import logging
 
 from app.schedule.schedule_utils import get_scheduler
-from app.bot.service.auto_cancel_spot_service import auto_cancel_spot
+from app.bot.service.spots.auto_cancel_spot_service import auto_cancel_spot
 
 async def schedule_spot_cancellation(confirmation_data, delay_minutes: int = 15):
     """

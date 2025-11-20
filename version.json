@@ -1,0 +1,33 @@
+{
+    "current_version": "1.2.0",
+    "versions": [
+        {
+            "version": "1.0",
+            "changes": [
+                "Первоначальный запуск бота",
+                "Базовые команды /start и /help"
+            ],
+            "release_date": "2025-11-12",
+            "notified": true
+        },
+        {
+            "version": "1.1",
+            "changes": [
+                "Добавлена система уведомлений",
+                "Улучшена производительность"
+            ],
+            "release_date": "2025-11-18",
+            "notified": true
+        },
+        {
+            "version": "1.2",
+            "changes": [
+                "Новая команда /settings",
+                "Обновлен дизайн интерфейса",
+                "Исправлены мелкие ошибки"
+            ],
+            "release_date": "2025-11-20",
+            "notified": false
+        }
+    ]
+}

@@ -2,38 +2,28 @@ import uuid
 from datetime import datetime, date
 from typing import Optional
 from dataclasses import dataclass
-from enum import Enum
 
+from app.data.models.requests.requests_enum import ParkingRequestStatus
 
-class ParkingRequestStatus(Enum):
-    PENDING = "PENDING"
-    ACCEPTED = "ACCEPTED"
-    CANCELED = "CANCELED"
-    NOT_FOUND = "NOT_FOUND"
-    WAITING_CONFIRMATION = "WAITING_CONFIRMATION"
 
 # Модель для таблицы parking_requests
 @dataclass
 class ParkingRequest:
-    id: uuid.UUID
-    user_id: uuid.UUID
-    request_date: date
-    status: ParkingRequestStatus
-    created_at: datetime
+    id: str = None
+    user_id: str = None
+    request_date: date = None
+    status: ParkingRequestStatus = None
+    created_at: datetime = None
     processed_at: Optional[datetime] = None
 
     def __post_init__(self):
-        if not isinstance(self.id, uuid.UUID):
-            self.id = uuid.UUID(str(self.id))
-        if not isinstance(self.user_id, uuid.UUID):
-            self.user_id = uuid.UUID(str(self.user_id))
         if isinstance(self.status, str):
             self.status = ParkingRequestStatus(self.status)
 
     @classmethod
-    def create_new(cls, user_id: uuid.UUID, request_date: date) -> 'ParkingRequest':
+    def create_new(cls, user_id: str, request_date: date) -> 'ParkingRequest':
         return cls(
-            id=uuid.uuid4(),
+            id=str(uuid.uuid4()),
             user_id=user_id,
             request_date=request_date,
             status=ParkingRequestStatus.PENDING,
