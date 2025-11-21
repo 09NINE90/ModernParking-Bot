@@ -1,3 +1,6 @@
+from app.data.db_config import DB_SCHEMA
+
+
 async def get_dates_with_availability(cur):
     """
         Получает список дат, на которые есть доступные парковочные места и ожидающие запросы.
@@ -25,12 +28,12 @@ async def get_dates_with_availability(cur):
             - Возвращает только даты, где есть и предложение (свободные места), и спрос (запросы)
             - Асинхронная функция, требует await при вызове
         """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT DISTINCT pr.release_date
-                FROM dont_touch.parking_releases pr
+                FROM {DB_SCHEMA}.parking_releases pr
                 WHERE pr.status = 'PENDING'
                   AND EXISTS (SELECT 1
-                              FROM dont_touch.parking_requests prq
+                              FROM {DB_SCHEMA}.parking_requests prq
                               WHERE prq.request_date = pr.release_date
                                 AND prq.status = 'PENDING')
                 ''')
@@ -70,14 +73,14 @@ async def get_candidates(cur, distribution_date, free_spots):
             - Статус 'PENDING' - рассматриваются только активные, необработанные запросы
             - Асинхронная функция, требует await при вызове
         """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT prq.id as request_id, prq.user_id, u.rating, u.tg_id
-                FROM dont_touch.parking_requests prq
-                         JOIN dont_touch.users u ON prq.user_id = u.user_id
+                FROM {DB_SCHEMA}.parking_requests prq
+                         JOIN {DB_SCHEMA}.users u ON prq.user_id = u.user_id
                 WHERE prq.request_date = %s
                   AND prq.status = 'PENDING'
                   AND NOT EXISTS (SELECT 1
-                                  FROM dont_touch.parking_releases prl
+                                  FROM {DB_SCHEMA}.parking_releases prl
                                   WHERE prl.user_id = prq.user_id
                                     AND prl.release_date = %s
                                     AND prl.status = 'PENDING')

@@ -1,8 +1,8 @@
 -- Создание схемы если не существует
-CREATE SCHEMA IF NOT EXISTS dont_touch;
+CREATE SCHEMA IF NOT EXISTS DEFAULT_SCHEMA;
 
 -- Таблица пользователей
-CREATE TABLE IF NOT EXISTS dont_touch.users
+CREATE TABLE IF NOT EXISTS DEFAULT_SCHEMA.users
 (
     user_id    UUID    NOT NULL PRIMARY KEY,
     tg_id      INTEGER NOT NULL UNIQUE,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS dont_touch.users
 );
 
 -- Таблица парковочных мест
-CREATE TABLE IF NOT EXISTS dont_touch.parking_spots
+CREATE TABLE IF NOT EXISTS DEFAULT_SCHEMA.parking_spots
 (
     spot_id      INTEGER NOT NULL PRIMARY KEY,
     is_active    BOOLEAN DEFAULT FALSE,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS dont_touch.parking_spots
 );
 
 -- Заполнение парковочных мест
-INSERT INTO dont_touch.parking_spots (spot_id, floor_number)
+INSERT INTO DEFAULT_SCHEMA.parking_spots (spot_id, floor_number)
 SELECT
     g as spot_id,
     CASE
@@ -30,10 +30,10 @@ SELECT
         WHEN g BETWEEN 130 AND 173 THEN 5
     END as floor_number
 FROM generate_series(3, 173) AS g
-WHERE NOT EXISTS (SELECT 1 FROM dont_touch.parking_spots);
+WHERE NOT EXISTS (SELECT 1 FROM DEFAULT_SCHEMA.parking_spots);
 
 -- Таблица запросов на парковку
-CREATE TABLE IF NOT EXISTS dont_touch.parking_requests
+CREATE TABLE IF NOT EXISTS DEFAULT_SCHEMA.parking_requests
 (
     id           UUID NOT NULL PRIMARY KEY,
     user_id      UUID NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS dont_touch.parking_requests
 
     CONSTRAINT fk_parking_requests_user_id
         FOREIGN KEY (user_id)
-            REFERENCES dont_touch.users
+            REFERENCES DEFAULT_SCHEMA.users
             ON DELETE CASCADE,
 
     CONSTRAINT chk_parking_requests_status
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS dont_touch.parking_requests
 );
 
 -- Таблица освобожденных мест
-CREATE TABLE IF NOT EXISTS dont_touch.parking_releases
+CREATE TABLE IF NOT EXISTS DEFAULT_SCHEMA.parking_releases
 (
     id           UUID    NOT NULL PRIMARY KEY,
     user_id      UUID    NOT NULL,
@@ -63,29 +63,29 @@ CREATE TABLE IF NOT EXISTS dont_touch.parking_releases
 
     CONSTRAINT fk_parking_releases_user_id
         FOREIGN KEY (user_id)
-            REFERENCES dont_touch.users
+            REFERENCES DEFAULT_SCHEMA.users
             ON DELETE CASCADE,
 
     CONSTRAINT fk_parking_releases_spot_id
         FOREIGN KEY (spot_id)
-            REFERENCES dont_touch.parking_spots
+            REFERENCES DEFAULT_SCHEMA.parking_spots
             ON DELETE CASCADE,
 
     CONSTRAINT fk_parking_releases_user_id_took
         FOREIGN KEY (user_id_took)
-            REFERENCES dont_touch.users
+            REFERENCES DEFAULT_SCHEMA.users
             ON DELETE SET NULL
 );
 
 -- Индексы
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_user_id_request_date
-ON dont_touch.parking_requests(user_id, request_date);
+ON DEFAULT_SCHEMA.parking_requests(user_id, request_date);
 
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_spot_id_releases_date
-ON dont_touch.parking_releases(spot_id, release_date);
+ON DEFAULT_SCHEMA.parking_releases(spot_id, release_date);
 
-CREATE INDEX IF NOT EXISTS idx_users_tg_id ON dont_touch.users (tg_id);
-CREATE INDEX IF NOT EXISTS idx_parking_requests_user_date ON dont_touch.parking_requests (user_id, request_date);
-CREATE INDEX IF NOT EXISTS idx_parking_requests_status ON dont_touch.parking_requests (status);
-CREATE INDEX IF NOT EXISTS idx_parking_releases_date ON dont_touch.parking_releases (release_date);
-CREATE INDEX IF NOT EXISTS idx_parking_releases_spot_date ON dont_touch.parking_releases (spot_id, release_date);
+CREATE INDEX IF NOT EXISTS idx_users_tg_id ON DEFAULT_SCHEMA.users (tg_id);
+CREATE INDEX IF NOT EXISTS idx_parking_requests_user_date ON DEFAULT_SCHEMA.parking_requests (user_id, request_date);
+CREATE INDEX IF NOT EXISTS idx_parking_requests_status ON DEFAULT_SCHEMA.parking_requests (status);
+CREATE INDEX IF NOT EXISTS idx_parking_releases_date ON DEFAULT_SCHEMA.parking_releases (release_date);
+CREATE INDEX IF NOT EXISTS idx_parking_releases_spot_date ON DEFAULT_SCHEMA.parking_releases (spot_id, release_date);

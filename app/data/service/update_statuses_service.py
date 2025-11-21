@@ -5,6 +5,7 @@ import psycopg2
 
 from app.bot.constants.log_types import LogNotification
 from app.bot.notification.log_notification import send_log_notification
+from app.data.db_config import DB_SCHEMA
 from app.data.init_db import get_db_connection
 from app.data.models.releases.parking_releases import ParkingReleaseStatus
 from app.data.models.requests.parking_requests import ParkingRequestStatus
@@ -16,15 +17,15 @@ async def update_statuses_service():
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute('''
-                            UPDATE dont_touch.parking_releases
+                cur.execute(f'''
+                            UPDATE {DB_SCHEMA}.parking_releases
                             SET status = %s
                             WHERE status = %s
                                 AND release_date < %s
                             ''', (ParkingReleaseStatus.NOT_FOUND.value, ParkingReleaseStatus.PENDING.name, today))
 
-                cur.execute('''
-                            UPDATE dont_touch.parking_requests
+                cur.execute(f'''
+                            UPDATE {DB_SCHEMA}.parking_requests
                             SET status = %s
                             WHERE status = %s
                               AND request_date < %s

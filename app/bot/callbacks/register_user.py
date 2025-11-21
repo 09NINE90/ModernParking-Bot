@@ -1,5 +1,6 @@
 import logging
 
+from app.data.db_config import DB_SCHEMA
 from app.data.init_db import get_db_connection
 from app.log_text import USER_REGISTRATION_ERROR
 
@@ -21,14 +22,14 @@ async def register_user(user):
         conn = get_db_connection()
         with conn.cursor() as cur:
             cur.execute(
-                'SELECT user_id FROM dont_touch.users WHERE tg_id = %s',
+                f'SELECT user_id FROM {DB_SCHEMA}.users WHERE tg_id = %s',
                 (user.id,)
             )
             existing_user = cur.fetchone()
 
             if not existing_user:
                 cur.execute(
-                    'INSERT INTO dont_touch.users (user_id, tg_id) VALUES (gen_random_uuid(), %s)',
+                    f'INSERT INTO {DB_SCHEMA}.users (user_id, tg_id) VALUES (gen_random_uuid(), %s)',
                     (user.id,)
                 )
                 conn.commit()
