@@ -1,9 +1,12 @@
 from aiogram import types
 
+from app.bot.config import GROUP_ID
 from app.bot.keyboard_markup import back_markup
 
 
 async def help_command(message: types.Message):
+    if message.chat.id == GROUP_ID:
+        return
     await message.answer(
         text=(
             "🤖 <b>Помощь по боту-ассистенту парковки</b>\n\n"
