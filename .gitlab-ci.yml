@@ -72,20 +72,65 @@ deploy_ift:
   needs: ["build"]
   when: on_success
   before_script:
-  # Устанавливаем необходимые пакеты
     - apt-get update && apt-get install -y openssh-client sudo
-
-    # Создаём директорию .ssh и задаём права
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-
-    # Записываем приватный ключ
     - echo "$SSH_PRIVATE_KEY" >  ~/.ssh/id_ed25519
     - chmod 600 ~/.ssh/id_ed25519
 
-    # Добавляем хост в known_hosts
     - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
   script:
+    - |
+    - cat > .env.ift <<EOF
+    - DB_USER=$DB_USER
+    - DB_PASSWORD=$DB_PASSWORD
+    - DB_HOST=$DB_HOST
+    - DB_PORT=$DB_PORT
+    - DB_NAME=$DB_NAME
+    - BOT_TOKEN=$BOT_TOKEN_IFT
+    - LOGS_CHANNEL_ID=$LOGS_CHANNEL_ID_IFT
+    - FEEDBACK_CHANNEL_ID=$FEEDBACK_CHANNEL_ID_IFT
+    - GROUP_ID=$GROUP_ID_IFT
+    - DB_SCHEMA=$DB_SCHEMA_IFT
+    - DELAY_MINUTES_CONFIRM_SPOT=$DELAY_MINUTES_CONFIRM_SPOT
+    - EOF
+
+    - scp .env.ift $SSH_USER@$SSH_HOST:$WORK_DIR_IFT/.env
+    - ssh $SSH_USER@$SSH_HOST "echo $REGISTRY_TOKEN | sudo docker login --username $REGISTRY_USER_LOGIN --password-stdin  && cd $WORK_DIR_IFT &&  sudo docker compose pull && sudo docker compose up  --force-recreate -d && exit"
+  tags:
+    - docker
+
+
+deploy_prom:
+  image: ubuntu:22.04
+  stage: deploy_prom
+  needs: ["build"]
+  when: manual
+  before_script:
+    - apt-get update && apt-get install -y openssh-client sudo
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" >  ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+
+    - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - |
+    - cat > .env.prom <<EOF
+    - DB_USER=$DB_USER
+    - DB_PASSWORD=$DB_PASSWORD
+    - DB_HOST=$DB_HOST
+    - DB_PORT=$DB_PORT
+    - DB_NAME=$DB_NAME
+    - BOT_TOKEN=$BOT_TOKEN
+    - LOGS_CHANNEL_ID=$LOGS_CHANNEL_ID
+    - FEEDBACK_CHANNEL_ID=$FEEDBACK_CHANNEL_ID
+    - GROUP_ID=$GROUP_ID
+    - DB_SCHEMA=$DB_SCHEMA
+    - DELAY_MINUTES_CONFIRM_SPOT=$DELAY_MINUTES_CONFIRM_SPOT
+    - EOF
+
+    - scp .env.prom $SSH_USER@$SSH_HOST:$WORK_DIR/.env
     - ssh $SSH_USER@$SSH_HOST "echo $REGISTRY_TOKEN | sudo docker login --username $REGISTRY_USER_LOGIN --password-stdin  && cd $WORK_DIR &&  sudo docker compose pull && sudo docker compose up  --force-recreate -d && exit"
   tags:
     - docker
@@ -106,10 +151,29 @@ shutdown_ift:
 
     - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
   script:
-    - ssh $SSH_USER@$SSH_HOST "cd $WORK_DIR &&  sudo docker compose down  && exit"
+    - ssh $SSH_USER@$SSH_HOST "cd $WORK_DIR_IFT &&  sudo docker compose down  && exit"
   tags:
     - docker
 
+shutdown_dev:
+  image: ubuntu:22.04
+  stage: deploy_prom
+  when: manual
+  before_script:
+    - apt-get update && apt-get install -y openssh-client sudo
+
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed2219
+
+    - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh $SSH_USER@$SSH_HOST "cd $WORK_DIR &&  sudo docker compose down  && exit"
+  tags:
+    - docker
+    -
 logs_ift:
   image: ubuntu:22.04
   stage: logs
@@ -126,7 +190,7 @@ logs_ift:
 
     - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
   script:
-    - ssh $SSH_USER@$SSH_HOST "sudo docker logs -f $CONTAINER_NAME"
+    - ssh $SSH_USER@$SSH_HOST "sudo docker logs -f $CONTAINER_NAME_IFT"
   tags:
     - docker
 
@@ -146,6 +210,6 @@ logs_prom:
 
     - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
   script:
-    - ssh $SSH_USER@$SSH_HOST "sudo docker logs -f $CONTAINER_NAME_PROM"
+    - ssh $SSH_USER@$SSH_HOST "sudo docker logs -f $CONTAINER_NAME"
   tags:
     - docker
