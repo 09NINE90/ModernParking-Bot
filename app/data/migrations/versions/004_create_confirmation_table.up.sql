@@ -1,4 +1,4 @@
-CREATE TABLE dont_touch.spot_confirmations (
+CREATE TABLE DEFAULT_SCHEMA.spot_confirmations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     release_id UUID NULL,
@@ -9,16 +9,16 @@ CREATE TABLE dont_touch.spot_confirmations (
 
     CONSTRAINT fk_spot_confirmations_user
         FOREIGN KEY (user_id)
-        REFERENCES dont_touch.users(user_id)
+        REFERENCES DEFAULT_SCHEMA.users(user_id)
         ON DELETE SET NULL,
 
     CONSTRAINT fk_spot_confirmations_release
         FOREIGN KEY (release_id)
-        REFERENCES dont_touch.parking_releases(id)
+        REFERENCES DEFAULT_SCHEMA.parking_releases(id)
         ON DELETE SET NULL,
 
     CONSTRAINT fk_spot_confirmations_request
         FOREIGN KEY (request_id)
-        REFERENCES dont_touch.parking_requests(id)
+        REFERENCES DEFAULT_SCHEMA.parking_requests(id)
         ON DELETE SET NULL
 );

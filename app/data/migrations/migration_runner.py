@@ -1,6 +1,8 @@
 import os
 import glob
 import re
+
+from app.data.db_config import DB_SCHEMA
 from app.data.migrations import (
     get_connection,
     create_migrations_table,
@@ -53,6 +55,7 @@ class SQLMigrationRunner:
                             print(f"Applying migration: {migration['name']}")
 
                             sql = self.read_sql_file(migration['up_file'])
+                            sql = sql.replace("DEFAULT_SCHEMA", DB_SCHEMA)
                             print(f"sql = {sql}")
                             cur.execute(sql)
 

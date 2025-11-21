@@ -1,3 +1,4 @@
+from app.data.db_config import DB_SCHEMA
 from app.data.models.releases.releases_enum import ParkingReleaseStatus
 
 
@@ -28,9 +29,9 @@ async def get_user_spot_by_date(cur, request_date, db_user_id):
         - Используется для проверки прав доступа или статуса бронирования
         - Асинхронная функция, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT 1
-                FROM dont_touch.parking_releases
+                FROM {DB_SCHEMA}.parking_releases
                 WHERE release_date = %s
                   AND user_id_took = %s
                   AND status = 'ACCEPTED'
@@ -67,9 +68,9 @@ async def get_spot_id_by_user_id_and_request_date(cur, db_user_id, request_date)
             - Явное преобразование db_user_id в string (str(db_user_id))
             - Асинхронная функция, требует await при вызове
         """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT spot_id
-                FROM dont_touch.parking_releases
+                FROM {DB_SCHEMA}.parking_releases
                 WHERE release_date = %s
                   AND user_id_took = %s
                   AND status = 'ACCEPTED'
@@ -107,8 +108,8 @@ async def insert_spot_on_date(cur, db_user_id, spot_num, release_date):
         - Функция асинхронная, требует await при вызове
         - Не заполняет поле user_id_took (получатель места), только user_id (инициатор)
     """
-    cur.execute('''
-                INSERT INTO dont_touch.parking_releases
+    cur.execute(f'''
+                INSERT INTO {DB_SCHEMA}.parking_releases
                     (id, user_id, spot_id, release_date)
                 VALUES (gen_random_uuid(), %s, %s, %s)
                 ON CONFLICT (spot_id, release_date) DO NOTHING
@@ -147,9 +148,9 @@ async def get_user_id_took_by_date_and_spot(cur, db_user_id, spot_number, releas
         - user_id_took будет NULL если место освобождено, но еще никем не занято
         - Асинхронная функция, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT pr.user_id_took
-                FROM dont_touch.parking_releases pr
+                FROM {DB_SCHEMA}.parking_releases pr
                 WHERE pr.release_date = %s
                   AND pr.user_id = %s
                   AND pr.spot_id = %s
@@ -172,9 +173,9 @@ async def free_parking_releases_by_date(cur, date):
         Возвращает:
             list: список всех свободных парковочных мест на указанную дату
         """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT *
-                FROM dont_touch.parking_releases pr
+                FROM {DB_SCHEMA}.parking_releases pr
                 WHERE pr.status = 'PENDING'
                   AND pr.release_date = %s
                 ''', (date,))
@@ -204,9 +205,9 @@ async def parking_releases_by_week(cur, status, monday_date, friday_date):
         - Используется для получения статистики возвратов за конкретную неделю
         - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT *
-                FROM dont_touch.parking_releases pr
+                FROM {DB_SCHEMA}.parking_releases pr
                 WHERE pr.status = %s
                   AND pr.release_date >= %s
                   AND pr.release_date <= %s
@@ -230,7 +231,7 @@ async def current_spots_releases_by_user(cur, user_id, release_date):
     Возвращает:
         list: список кортежей с данными освобожденных мест, где каждый кортеж содержит:
             - spot_id: идентификатор парковочного места
-            - status: статус освобождения ('ACCEPTED', 'PENDING' или 'WAITING')
+            - status: статус освобождения (f'ACCEPTED', 'PENDING' или 'WAITING')
             - release_date: дата освобождения места
 
     Особенности:
@@ -239,9 +240,9 @@ async def current_spots_releases_by_user(cur, user_id, release_date):
         - Используется для отображения актуальных освобожденных мест в статистике пользователя
         - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT pr.spot_id, pr.status, pr.release_date
-                FROM dont_touch.parking_releases pr
+                FROM {DB_SCHEMA}.parking_releases pr
                 WHERE pr.user_id = %s
                   AND pr.release_date >= %s
                   AND (pr.status = 'ACCEPTED' OR pr.status = 'PENDING' OR pr.status = 'WAITING')
@@ -276,9 +277,9 @@ async def get_tomorrow_accepted_spot(cur, date):
     """
     cur.execute("""
                 SELECT prel.spot_id, u.tg_id, u.user_id, prel.id, prel.release_date, prq.id
-                FROM dont_touch.parking_releases prel
-                         JOIN dont_touch.users u ON prel.user_id_took = u.user_id
-                         JOIN dont_touch.parking_requests prq
+                FROM {DB_SCHEMA}.parking_releases prel
+                         JOIN {DB_SCHEMA}.users u ON prel.user_id_took = u.user_id
+                         JOIN {DB_SCHEMA}.parking_requests prq
                               ON prq.user_id = prel.user_id_took 
                                   AND prq.request_date = prel.release_date
                 WHERE prel.status = 'ACCEPTED'
@@ -311,8 +312,8 @@ async def update_revoke_parking_release(cur, release_id, current_status: Parking
             - Используется в процессе отзыва заявки на освобождение места
             - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
-                UPDATE dont_touch.parking_releases
+    cur.execute(f'''
+                UPDATE {DB_SCHEMA}.parking_releases
                 SET user_id_took = NULL,
                     status       = %s
                 WHERE id = %s
@@ -344,12 +345,12 @@ async def find_user_releases_for_revoke(cur, db_user_id, date):
             - Используется для функциональности отзыва запросов на освобождение мест
             - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT prel.id,
                        prel.release_date,
                        prel.status,
                        prel.spot_id
-                FROM dont_touch.parking_releases prel
+                FROM {DB_SCHEMA}.parking_releases prel
                 WHERE prel.user_id = %s
                   AND prel.release_date >= %s
                   AND prel.status = 'PENDING'
@@ -385,12 +386,12 @@ async def find_release_for_confirm_revoke(cur, db_user_id, release_id):
             - Используется для подтверждения отзыва запроса на освобождение места
             - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT prel.id,
                        prel.release_date,
                        prel.status,
                        prel.spot_id
-                FROM dont_touch.parking_releases prel
+                FROM {DB_SCHEMA}.parking_releases prel
                 WHERE prel.user_id = %s
                   AND prel.id = %s
                 LIMIT 1
@@ -420,8 +421,8 @@ async def update_parking_releases(cur, user_id, release_id, current_status: Park
         - После выполнения место перестает быть свободным (user_id_took IS NULL → user_id_took = user_id)
         - Асинхронная функция, требует await при вызове
     """
-    cur.execute('''
-                UPDATE dont_touch.parking_releases
+    cur.execute(f'''
+                UPDATE {DB_SCHEMA}.parking_releases
                 SET user_id_took = %s,
                     status       = %s
                 WHERE id = %s
@@ -455,10 +456,10 @@ async def get_release_owner(cur, release_id):
            - Асинхронная функция, требует await при вызове
            - Полезно для систем уведомлений и аудита действий
        """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT pr.user_id, u.tg_id
-                FROM dont_touch.parking_releases pr
-                         JOIN dont_touch.users u ON pr.user_id = u.user_id
+                FROM {DB_SCHEMA}.parking_releases pr
+                         JOIN {DB_SCHEMA}.users u ON pr.user_id = u.user_id
                 WHERE pr.id = %s
                 ''', (release_id,))
 
@@ -494,9 +495,9 @@ async def get_free_spots(cur, distribution_date):
             - Асинхронная функция, требует await при вызове
             - Используется в процессах автоматического распределения мест
         """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT id, spot_id
-                FROM dont_touch.parking_releases
+                FROM {DB_SCHEMA}.parking_releases
                 WHERE release_date = %s
                   AND status = 'PENDING'
                 ORDER BY created_at ASC
