@@ -173,7 +173,8 @@ shutdown_dev:
     - ssh $SSH_USER@$SSH_HOST "cd $WORK_DIR &&  sudo docker compose down  && exit"
   tags:
     - docker
-    -
+
+
 logs_ift:
   image: ubuntu:22.04
   stage: logs
