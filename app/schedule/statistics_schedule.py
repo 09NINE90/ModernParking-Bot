@@ -33,12 +33,12 @@ def setup_scheduler():
         id='daily_evening_statistics'
     )
 
-    # Ежедневно в 18:00
+    # Ежедневно в 18:30 todo изменить на 18:00
     scheduler.add_job(
         spot_reminder,
         trigger=CronTrigger(
             hour=18,
-            minute=00
+            minute=30
         ),
         id='daily_user_reminder'
     )
