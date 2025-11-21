@@ -275,7 +275,7 @@ async def get_tomorrow_accepted_spot(cur, date):
         - Используется для уведомлений пользователей о предстоящем освобождении мест
         - Функция асинхронная, требует await при вызове
     """
-    cur.execute("""
+    cur.execute(f"""
                 SELECT prel.spot_id, u.tg_id, u.user_id, prel.id, prel.release_date, prq.id
                 FROM {DB_SCHEMA}.parking_releases prel
                          JOIN {DB_SCHEMA}.users u ON prel.user_id_took = u.user_id
