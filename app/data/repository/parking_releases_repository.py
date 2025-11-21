@@ -275,11 +275,14 @@ async def get_tomorrow_accepted_spot(cur, date):
         - Функция асинхронная, требует await при вызове
     """
     cur.execute("""
-                SELECT pr.spot_id, u.tg_id
-                FROM dont_touch.parking_releases pr
-                         JOIN dont_touch.users u ON pr.user_id_took = u.user_id
-                WHERE pr.status = 'ACCEPTED'
-                  AND pr.release_date = %s
+                SELECT prel.spot_id, u.tg_id, u.user_id, prel.id, prel.release_date, prq.id
+                FROM dont_touch.parking_releases prel
+                         JOIN dont_touch.users u ON prel.user_id_took = u.user_id
+                         JOIN dont_touch.parking_requests prq
+                              ON prq.user_id = prel.user_id_took 
+                                  AND prq.request_date = prel.release_date
+                WHERE prel.status = 'ACCEPTED'
+                  AND prel.release_date = %s
                 """, (date,))
 
     return cur.fetchall()

@@ -10,7 +10,7 @@ from app.log_text import AUTO_CANCEL_SPOT_ERROR, AUTO_CANCEL_SPOT_FAILED
 
 async def auto_cancel_spot(confirmation_data):
     """
-    Автоматически отменяет место если пользователь не подтвердил вовремя
+        Автоматически отменяет место если пользователь не подтвердил вовремя
     """
     try:
         logging.debug(f"Auto-canceling spot for user {confirmation_data.tg_user_id}, "
