@@ -1,0 +1,2 @@
+ALTER TABLE DEFAULT_SCHEMA.users
+    ALTER COLUMN tg_id TYPE bigint;
