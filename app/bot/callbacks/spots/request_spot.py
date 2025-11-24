@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date, datetime, timedelta
 
 import psycopg2
 from aiogram.fsm.context import FSMContext
@@ -8,11 +8,11 @@ from aiogram.types import CallbackQuery
 from app.bot.constants.log_types import LogNotification
 from app.bot.notification.log_notification import send_log_notification
 from app.bot.service.distribution_service import distribute_parking_spots
-from app.bot.keyboard_markup import return_markup, date_list_markup
+from app.bot.keyboard_markup import return_markup, date_list_markup, back_keyboard, back_markup
 from app.bot.service.user_service import get_db_user_id
 from app.data.init_db import get_db_connection
 from app.data.repository.parking_releases_repository import get_user_spot_by_date
-from app.data.repository.parking_requests_repository import insert_request_on_date
+from app.data.repository.parking_requests_repository import insert_request_on_date, get_user_request_dates
 from app.log_text import SPOT_REQUEST_SAVE_ERROR, DB_USER_ID_GET_ERROR, DATABASE_ERROR
 
 
@@ -26,11 +26,52 @@ async def show_request_calendar(query: CallbackQuery, state: FSMContext):
             query: CallbackQuery объект от Telegram
             state: FSMContext для управления состоянием диалога
     """
-    await query.message.edit_text(
-        "Выберите дату, на которую хотите запросить место:",
-        reply_markup=date_list_markup(callback_name='request_date')
-    )
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                tg_user_id = query.from_user.id
+                db_user_id = await get_db_user_id(cur, tg_user_id)
+                today = datetime.today().date()
 
+                if not db_user_id:
+                    logging.error(DB_USER_ID_GET_ERROR.format(tg_user_id))
+                    await send_log_notification(LogNotification.ERROR, DB_USER_ID_GET_ERROR.format(tg_user_id))
+                    return None
+
+                existing_dates_result = await get_user_request_dates(cur, db_user_id, today)
+                if not existing_dates_result:
+                    existing_dates = []
+                else:
+                    existing_dates = [date_tuple[0] for date_tuple in existing_dates_result]
+
+                if not is_has_available_dates(existing_dates, today):
+                    await query.message.edit_text(
+                        "На ближайшие 7 дней у вас уже есть запросы на все рабочие даты.\n\n"
+                        "<i>Попробуйте отправить запрос позже, когда будут доступны новые даты.</i>",
+                        reply_markup=back_markup
+                    )
+                else:
+                    await query.message.edit_text(
+                        "Выберите дату, на которую хотите запросить место:\n\n"
+                        f"ℹ️ <i>Отображаются только те даты, на которые Вы еще не делали запрос.</i>",
+                        reply_markup=date_list_markup(existing_dates=existing_dates, callback_name='request_date')
+                    )
+    except psycopg2.Error as e:
+        logging.error(DATABASE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
+
+
+def is_has_available_dates(existing_dates, today):
+    available_dates = []
+    for i in range(7):
+        current_date = today + timedelta(days=i)
+        if current_date.weekday() == 5 or current_date.weekday() == 6:
+            continue
+        if current_date in existing_dates:
+            continue
+        available_dates.append(current_date)
+
+    return available_dates
 
 async def process_spot_request(query: CallbackQuery, date_str, state: FSMContext):
     """

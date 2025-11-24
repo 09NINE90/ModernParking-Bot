@@ -64,21 +64,27 @@ reminder_spot_confirmation_keyboard = [
 
 reminder_spot_confirmation_markup = InlineKeyboardMarkup(inline_keyboard=reminder_spot_confirmation_keyboard)
 
-def date_list_markup(count_days: int = 7, callback_name: str = '') -> InlineKeyboardMarkup:
+def date_list_markup(existing_dates = None, count_days: int = 7, callback_name: str = '') -> InlineKeyboardMarkup:
     today = date.today()
     builder = InlineKeyboardBuilder()
 
     for i in range(count_days):
         current_date = today + timedelta(days=i)
-        if current_date.weekday() != 5 and current_date.weekday() != 6:
-            weekday_ru = weekdays_ru[current_date.weekday()]
-            today_text = ''
-            if current_date == today:
-                today_text = 'сегодня'
-            builder.button(
-                text=f"{current_date.strftime('%d.%m')} ({weekday_ru}) {today_text}",
-                callback_data=f"{callback_name}_{current_date}"
-            )
+
+        if current_date.weekday() == 5 or current_date.weekday() == 6:
+            continue
+
+        if current_date in existing_dates:
+            continue
+
+        weekday_ru = weekdays_ru[current_date.weekday()]
+        today_text = ''
+        if current_date == today:
+            today_text = 'сегодня'
+        builder.button(
+            text=f"{current_date.strftime('%d.%m')} ({weekday_ru}) {today_text}",
+            callback_data=f"{callback_name}_{current_date}"
+        )
 
     builder.button(text="🔙 Назад", callback_data="back_to_main")
     builder.adjust(1)
