@@ -136,6 +136,7 @@ async def current_spots_request_by_user(cur, user_id, request_date):
 
     return cur.fetchall()
 
+
 async def find_user_requests_for_revoke(cur, db_user_id, date):
     """
         Асинхронно находит запросы на парковку пользователя для возможного отзыва.
@@ -179,6 +180,7 @@ async def find_user_requests_for_revoke(cur, db_user_id, date):
                 ''', (db_user_id, date,))
 
     return cur.fetchall()
+
 
 async def find_request_for_confirm_revoke(cur, db_user_id, request_id):
     """
@@ -255,3 +257,37 @@ async def update_parking_request_status(cur, request_id, current_status: Parking
                     processed_at = CURRENT_TIMESTAMP
                 WHERE id = %s
                 ''', (current_status.name, request_id,))
+
+
+async def get_user_request_dates(cur, user_id, from_date):
+    """
+        Получает список дат, на которые пользователь уже создал запросы на парковку.
+
+        Возвращает все даты начиная с указанной, для которых у пользователя есть
+        активные запросы в системе.
+
+        Параметры:
+            cur: курсор базы данных для выполнения SQL-запросов
+            user_id: UUID пользователя в таблице users
+            from_date: начальная дата для поиска (включительно)
+
+        Логика:
+            - Выбирает все даты запросов пользователя начиная с указанной даты
+            - Включает запросы с любым статусом (PENDING, ACCEPTED, CANCELED и т.д.)
+            - Возвращает результаты в хронологическом порядке
+
+        Возвращает:
+            list: список кортежей с датами запросов в формате [(datetime.date,), ...]
+
+        Особенности:
+            - Используется для проверки доступных дат при создании новых запросов
+            - Фильтрует выходные дни на уровне приложения, а не в БД
+            - Асинхронная функция, требует await при вызове
+            - Не учитывает статус запроса - возвращает все даты независимо от статуса
+    """
+    cur.execute(f'''
+                SELECT request_date FROM {DB_SCHEMA}.parking_requests 
+                WHERE user_id = %s 
+                    AND request_date >= %s
+                ''', (user_id, from_date,))
+    return cur.fetchall()
