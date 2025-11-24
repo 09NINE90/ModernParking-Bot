@@ -27,7 +27,7 @@ async def show_request_calendar(query: CallbackQuery, state: FSMContext):
             state: FSMContext для управления состоянием диалога
     """
     await query.message.edit_text(
-        "Выберите дату, когда освободите свое место:",
+        "Выберите дату, на которую хотите запросить место:",
         reply_markup=date_list_markup(callback_name='request_date')
     )
 
