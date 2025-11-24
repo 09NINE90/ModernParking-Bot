@@ -1,14 +1,14 @@
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
-import uuid
 
-from app.data.models.spot_confirmation_dto import SpotConfirmationDTO
+from app.data.models.spot_reminder.parking_reminder_dto import ParkingReminder
 
 
 @dataclass
-class SpotConfirmation:
-    """Модель для таблицы spot_confirmations"""
+class ReminderSpotConfirmation:
+    """Модель для таблицы reminder_spot_confirmations"""
     id: str = None
     user_id: str = None
     release_id: Optional[str] = None
@@ -30,7 +30,7 @@ class SpotConfirmation:
 
     @classmethod
     def create_new(cls, db_user_id: str,  release_id: Optional[str] = None,
-                   request_id: Optional[str] = None) -> 'SpotConfirmation':
+                   request_id: Optional[str] = None) -> 'ReminderSpotConfirmation':
         """Создает новое подтверждение места"""
         return cls(
             user_id=db_user_id,
@@ -39,7 +39,7 @@ class SpotConfirmation:
         )
 
     @classmethod
-    def from_dto(cls, dto: 'SpotConfirmationDTO') -> 'SpotConfirmation':
+    def from_dto(cls, dto: 'ParkingReminder') -> 'ReminderSpotConfirmation':
         """Создает SpotConfirmation из DTO"""
         return cls.create_new(
             db_user_id=dto.db_user_id,

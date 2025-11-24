@@ -1,3 +1,6 @@
+from app.data.db_config import DB_SCHEMA
+
+
 async def get_user_id_by_tg_id(cur, tg_id):
     """
     Находит внутренний идентификатор пользователя по его Telegram ID.
@@ -25,7 +28,7 @@ async def get_user_id_by_tg_id(cur, tg_id):
         - Является ключевой функцией для аутентификации и авторизации пользователей
     """
     cur.execute(
-        'SELECT user_id FROM dont_touch.users WHERE tg_id = %s',
+        f'SELECT user_id FROM {DB_SCHEMA}.users WHERE tg_id = %s',
         (tg_id,)
     )
     return cur.fetchone()
@@ -51,8 +54,8 @@ async def decrement_user_rating(cur, db_user_id):
         - Асинхронная функция, требует await при вызове
         - Система поощряет справедливость - те, кто получил больше мест, имеют меньший приоритет
     """
-    cur.execute("""
-                UPDATE dont_touch.users
+    cur.execute(f"""
+                UPDATE {DB_SCHEMA}.users
                 SET rating = rating - 1
                 WHERE user_id = %s
                 RETURNING user_id
@@ -80,8 +83,8 @@ async def increment_user_rating(cur, user_id):
         - Асинхронная функция, требует await при вызове
         - Система поощряет справедливость - те, кто получил больше мест, имеют меньший приоритет
     """
-    cur.execute('''
-                UPDATE dont_touch.users
+    cur.execute(f'''
+                UPDATE {DB_SCHEMA}.users
                 SET rating = rating + 1
                 WHERE user_id = %s
                 ''', (user_id,))

@@ -1,4 +1,4 @@
-UPDATE dont_touch.parking_spots
+UPDATE DEFAULT_SCHEMA.parking_spots
 SET is_active = TRUE
 WHERE spot_id IN (10, 11, 12, 13, 16, 17, 19, 20, 21, 86, 87, 88, 89, 90, 91,
                   92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 124, 125, 126,

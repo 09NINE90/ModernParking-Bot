@@ -5,7 +5,8 @@ from datetime import datetime
 import psycopg2
 
 from app.bot.constants.log_types import LogNotification
-from app.data.models.spot_confirmation_dto import SpotConfirmationDTO
+from app.bot.notification.types_notifications import NotificationTypes
+from app.data.models.spot_confirmation.spot_confirmation_dto import SpotConfirmationDTO
 from app.bot.notification.log_notification import send_log_notification
 from app.bot.notification.messages.to_owner_message import to_owner_message
 from app.bot.notification.messages.to_user_about_assigned_spot import to_user_about_assigned_spot
@@ -73,7 +74,7 @@ async def distribute_parking_spots():
                             await insert_row_of_spot_confirmation(cur, user_id, release_id, request_id)
 
                             message_text = await to_user_about_found_spot(spot_confirmation_data)
-                            await notify_user(tg_id, message_text, True)
+                            await notify_user(tg_id, message_text, NotificationTypes.SPOT_FOUND)
 
                         else:
                             release_owner = await get_release_owner(cur, release_id)

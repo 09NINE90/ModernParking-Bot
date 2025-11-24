@@ -2,7 +2,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from app.bot.callbacks.back_to_main_menu import back_to_main_menu
-from app.bot.callbacks.handle_cancel_spot import handle_cancel_spot
+from app.bot.callbacks.spots.handle_cancel_spot import handle_cancel_spot
 from app.bot.callbacks.handle_feedback import handle_feedback
 from app.bot.callbacks.handle_my_statistics import handle_my_statistics
 from app.bot.callbacks.revoke_releases.handle_confirm_revoke_release import handle_confirm_revoke_release
@@ -11,9 +11,11 @@ from app.bot.callbacks.revoke_releases.handle_show_revoke_release_keyboard impor
 from app.bot.callbacks.revoke_requests.handle_confirm_revoke_request import handle_confirm_revoke_request
 from app.bot.callbacks.revoke_requests.handle_confirmation_revoke_request import handle_confirmation_revoke_request
 from app.bot.callbacks.revoke_requests.handle_show_revoke_request_keyboard import handle_show_revoke_request_keyboard
-from app.bot.callbacks.handle_take_spot import handle_take_spot
-from app.bot.callbacks.release_spot import select_spot, process_spot_release
-from app.bot.callbacks.request_spot import show_request_calendar, process_spot_request
+from app.bot.callbacks.spots.handle_cancel_spot_by_reminder import handle_cancel_spot_by_reminder
+from app.bot.callbacks.spots.handle_take_spot import handle_take_spot
+from app.bot.callbacks.spots.handle_take_spot_by_reminder import handle_take_spot_by_reminder
+from app.bot.callbacks.spots.release_spot import select_spot, process_spot_release
+from app.bot.callbacks.spots.request_spot import show_request_calendar, process_spot_request
 
 
 async def handle_callback(query: CallbackQuery, state: FSMContext):
@@ -79,6 +81,14 @@ async def handle_callback(query: CallbackQuery, state: FSMContext):
         case "cancel_spot":
             await state.clear()
             await handle_cancel_spot(query, state)
+
+        case "take_spot_by_reminder":
+            await state.clear()
+            await handle_take_spot_by_reminder(query, state)
+
+        case "cancel_spot_by_reminder":
+            await state.clear()
+            await handle_cancel_spot_by_reminder(query, state)
 
         case "my_statistics":
             await state.clear()

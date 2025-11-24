@@ -1,3 +1,6 @@
+from app.data.db_config import DB_SCHEMA
+
+
 async def get_spot_by_id(cur, spot_num):
     """
         Асинхронно проверяет существование активного парковочного места по идентификатору.
@@ -19,9 +22,9 @@ async def get_spot_by_id(cur, spot_num):
             - Используется для валидации существования парковочных мест
             - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT 1
-                FROM dont_touch.parking_spots ps
+                FROM {DB_SCHEMA}.parking_spots ps
                 WHERE ps.spot_id = %s
                   AND ps.is_active = TRUE
                 ''', (spot_num,))

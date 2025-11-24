@@ -1,3 +1,5 @@
+from app.data.db_config import DB_SCHEMA
+
 
 async def get_parking_transfers_by_date(cur, date):
     """
@@ -23,13 +25,13 @@ async def get_parking_transfers_by_date(cur, date):
         - Используется для анализа передачи парковочных мест
         - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT pr.spot_id,
                        recipient.tg_id AS recipient_tg_id,
                        owner.tg_id     AS owner_tg_id
-                FROM dont_touch.parking_releases pr
-                         JOIN dont_touch.users owner ON pr.user_id = owner.user_id
-                         JOIN dont_touch.users recipient ON pr.user_id_took = recipient.user_id
+                FROM {DB_SCHEMA}.parking_releases pr
+                         JOIN {DB_SCHEMA}.users owner ON pr.user_id = owner.user_id
+                         JOIN {DB_SCHEMA}.users recipient ON pr.user_id_took = recipient.user_id
                 WHERE pr.release_date = %s
                   AND pr.user_id_took IS NOT NULL
                     AND pr.status = 'ACCEPTED';
@@ -64,13 +66,13 @@ async def get_parking_transfers_by_week(cur, monday_date, friday_date):
         - Используется для недельной статистики передачи парковочных мест
         - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT pr.spot_id,
                        recipient.tg_id AS recipient_tg_id,
                        owner.tg_id     AS owner_tg_id
-                FROM dont_touch.parking_releases pr
-                         JOIN dont_touch.users owner ON pr.user_id = owner.user_id
-                         JOIN dont_touch.users recipient ON pr.user_id_took = recipient.user_id
+                FROM {DB_SCHEMA}.parking_releases pr
+                         JOIN {DB_SCHEMA}.users owner ON pr.user_id = owner.user_id
+                         JOIN {DB_SCHEMA}.users recipient ON pr.user_id_took = recipient.user_id
                 WHERE pr.release_date >= %s
                   AND pr.release_date <= %s
                   AND pr.user_id_took IS NOT NULL

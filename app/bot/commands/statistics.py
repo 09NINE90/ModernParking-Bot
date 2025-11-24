@@ -2,12 +2,15 @@ import logging
 
 from aiogram import types
 
+from app.bot.config import GROUP_ID
 from app.bot.keyboard_markup import return_markup
 from app.bot.service.statistics_service import daily_statistics_service
 from app.log_text import STATISTICS_CHECK_ERROR
 
 
 async def statistics(message: types.Message):
+    if message.chat.id == GROUP_ID:
+        return
     try:
         await daily_statistics_service()
     except Exception as e:

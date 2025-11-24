@@ -1,3 +1,4 @@
+from app.data.db_config import DB_SCHEMA
 from app.data.models.requests.requests_enum import ParkingRequestStatus
 
 
@@ -24,8 +25,8 @@ async def insert_request_on_date(cur, db_user_id, request_date):
         - При конфликте запрос игнорируется (DO NOTHING)
         - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
-                INSERT INTO dont_touch.parking_requests
+    cur.execute(f'''
+                INSERT INTO {DB_SCHEMA}.parking_requests
                     (id, user_id, request_date)
                 VALUES (gen_random_uuid(), %s, %s)
                 ON CONFLICT (user_id, request_date) DO NOTHING
@@ -57,9 +58,9 @@ async def parking_requests_by_week(cur, status, monday_date, friday_date):
         - Используется для получения статистики заявок за конкретную неделю
         - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT *
-                FROM dont_touch.parking_requests pr
+                FROM {DB_SCHEMA}.parking_requests pr
                 WHERE pr.status = %s
                   AND pr.request_date >= %s
                   AND pr.request_date <= %s
@@ -90,9 +91,9 @@ async def all_parking_requests_by_status_and_user(cur, status, user_id):
         - Используется для получения полной истории заявок пользователя по статусу
         - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT *
-                FROM dont_touch.parking_requests pr
+                FROM {DB_SCHEMA}.parking_requests pr
                 WHERE pr.status = %s
                   AND pr.user_id = %s
                 ''', (status, user_id,))
@@ -124,9 +125,9 @@ async def current_spots_request_by_user(cur, user_id, request_date):
         - Используется для отображения актуальных запросов в статистике пользователя
         - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT pr.status, pr.request_date
-                FROM dont_touch.parking_requests pr
+                FROM {DB_SCHEMA}.parking_requests pr
                 WHERE pr.user_id = %s
                   AND pr.request_date >= %s
                   AND (pr.status = 'ACCEPTED' OR pr.status = 'PENDING')
@@ -161,13 +162,13 @@ async def find_user_requests_for_revoke(cur, db_user_id, date):
             - Используется для функциональности отзыва/аннулирования запросов на парковку
             - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT pr.id,
                        pr.request_date,
                        pr.status,
                        prel.spot_id
-                FROM dont_touch.parking_requests pr
-                         LEFT JOIN dont_touch.parking_releases prel
+                FROM {DB_SCHEMA}.parking_requests pr
+                         LEFT JOIN {DB_SCHEMA}.parking_releases prel
                                    ON pr.user_id = prel.user_id_took
                                        AND pr.request_date = prel.release_date
                                        AND prel.status = 'ACCEPTED'
@@ -207,14 +208,14 @@ async def find_request_for_confirm_revoke(cur, db_user_id, request_id):
             - Используется для подтверждения отзыва запроса на парковку
             - Функция асинхронная, требует await при вызове
     """
-    cur.execute('''
+    cur.execute(f'''
                 SELECT pr.id,
                        pr.request_date,
                        pr.status,
                        prel.spot_id,
                        prel.id
-                FROM dont_touch.parking_requests pr
-                         LEFT JOIN dont_touch.parking_releases prel
+                FROM {DB_SCHEMA}.parking_requests pr
+                         LEFT JOIN {DB_SCHEMA}.parking_releases prel
                                    ON pr.user_id = prel.user_id_took
                                        AND pr.request_date = prel.release_date
                                        AND prel.status = 'ACCEPTED'
@@ -248,8 +249,8 @@ async def update_parking_request_status(cur, request_id, current_status: Parking
         - Поддерживает все валидные статусы: PENDING, ACCEPTED, CANCELED, NOT_FOUND
         - Асинхронная функция, требует await при вызове
     """
-    cur.execute('''
-                UPDATE dont_touch.parking_requests
+    cur.execute(f'''
+                UPDATE {DB_SCHEMA}.parking_requests
                 SET status       = %s,
                     processed_at = CURRENT_TIMESTAMP
                 WHERE id = %s
