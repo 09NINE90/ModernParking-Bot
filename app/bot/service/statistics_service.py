@@ -47,8 +47,8 @@ async def daily_statistics_service(plus_day=0):
                     message_text += "\n<b>Трансферы мест:</b>\n"
                     for transfer in transfers:
                         emoji = get_random_car_emoji()
-                        recipient = await get_user_full_mention(transfer.recipient_tg_id)
-                        owner = await get_user_full_mention(transfer.owner_tg_id)
+                        recipient = await get_user_full_mention(user_id=transfer.recipient_tg_id, is_link=True)
+                        owner = await get_user_full_mention(user_id=transfer.owner_tg_id, is_link=True)
                         spot = transfer.spot_id
                         message_text += f"{emoji} {owner} отдал место <b>№{spot}</b> -> {recipient}\n\n"
 
@@ -103,8 +103,8 @@ async def weekly_statistics_service():
                     message_text += "\n<b>Трансферы мест:</b>\n"
                     for transfer in transfers:
                         emoji = get_random_car_emoji()
-                        recipient = await get_user_full_mention(transfer.recipient_tg_id)
-                        owner = await get_user_full_mention(transfer.owner_tg_id)
+                        recipient = await get_user_full_mention(user_id=transfer.recipient_tg_id, is_link=True)
+                        owner = await get_user_full_mention(user_id=transfer.owner_tg_id, is_link=True)
                         spot = transfer.spot_id
                         message_text += f"{emoji} {owner} отдал место <b>№{spot}</b> -> {recipient}\n\n"
 
