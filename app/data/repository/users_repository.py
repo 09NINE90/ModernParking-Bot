@@ -1,4 +1,5 @@
 from app.data.db_config import DB_SCHEMA
+from app.data.models.users.user_roles import UserRoles
 
 
 async def get_user_id_by_tg_id(cur, tg_id):
@@ -63,6 +64,7 @@ async def decrement_user_rating(cur, db_user_id):
 
     return cur.fetchone()
 
+
 async def increment_user_rating(cur, user_id):
     """
     Увеличивает рейтинг пользователя.
@@ -88,3 +90,14 @@ async def increment_user_rating(cur, user_id):
                 SET rating = rating + 1
                 WHERE user_id = %s
                 ''', (user_id,))
+
+
+async def is_user_has_role(cur, user_id, role: UserRoles):
+    cur.execute(f'''
+                    SELECT COUNT(*) > 0 AS has_role
+                    FROM {DB_SCHEMA}.users 
+                    WHERE tg_id = %s 
+                      AND roles = %s;
+                ''', (user_id, role.name))
+
+    return cur.fetchone()[0]

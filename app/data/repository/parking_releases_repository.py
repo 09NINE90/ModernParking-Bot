@@ -183,7 +183,7 @@ async def free_parking_releases_by_date(cur, date):
     return cur.fetchall()
 
 
-async def parking_releases_by_week(cur, status, monday_date, friday_date):
+async def parking_releases_between_two_dates(cur, status, first_day, last_day):
     """
     Асинхронно получает записи о возврате парковочных мест за указанную неделю по заданному статусу.
 
@@ -193,8 +193,8 @@ async def parking_releases_by_week(cur, status, monday_date, friday_date):
     Параметры:
         cur: курсор базы данных для выполнения SQL-запросов
         status: статус записей о возврате для фильтрации (например, 'ACCEPTED', 'NOT_FOUND')
-        monday_date: дата понедельника (начало периода, включительно)
-        friday_date: дата пятницы (конец периода, включительно)
+        first_day: дата понедельника (начало периода, включительно)
+        last_day: дата пятницы (конец периода, включительно)
 
     Возвращает:
         list: список кортежей со всеми полями записей о возвратах, удовлетворяющих условиям
@@ -211,9 +211,37 @@ async def parking_releases_by_week(cur, status, monday_date, friday_date):
                 WHERE pr.status = %s
                   AND pr.release_date >= %s
                   AND pr.release_date <= %s
-                ''', (status, monday_date, friday_date))
+                ''', (status, first_day, last_day))
 
     return cur.fetchall()
+
+
+async def get_parking_releases_statistics_for_period(cur, start_date, end_date):
+    """
+    Получает статистику по возвратам парковочных мест за указанный период
+    """
+    cur.execute(f'''
+        SELECT 
+            COUNT(*) as total,
+            COUNT(*) FILTER (WHERE status = 'ACCEPTED') as accepted,
+            COUNT(*) FILTER (WHERE status = 'PENDING') as pending,
+            COUNT(*) FILTER (WHERE status = 'CANCELED') as canceled,
+            COUNT(*) FILTER (WHERE status = 'NOT_FOUND') as not_found,
+            COUNT(*) FILTER (WHERE status = 'WAITING') as waiting
+        FROM {DB_SCHEMA}.parking_releases 
+        WHERE release_date BETWEEN %s AND %s
+    ''', (start_date, end_date))
+
+    stats = cur.fetchone()
+
+    return {
+        'total': stats[0],
+        'accepted': stats[1],
+        'pending': stats[2],
+        'canceled': stats[3],
+        'not_found': stats[4],
+        'waiting': stats[5]
+    }
 
 
 async def current_spots_releases_by_user(cur, user_id, release_date):
