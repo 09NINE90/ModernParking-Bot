@@ -4,6 +4,7 @@ import psycopg2
 from aiogram.types import CallbackQuery
 
 from app.bot.constants.log_types import LogNotification
+from app.bot.users.get_user_full_mention import get_user_full_mention
 from app.data.models.spot_confirmation.spot_confirmation_dto import SpotConfirmationDTO
 from app.bot.keyboard_markup import return_markup
 from app.bot.notification.log_notification import send_log_notification
@@ -15,6 +16,7 @@ from app.log_text import SPOT_CANCEL_ERROR, DB_USER_ID_GET_ERROR, DATABASE_ERROR
 from app.schedule.schedule_utils import cancel_scheduled_cancellation
 from app.bot.service.distribution_service import distribute_parking_spots
 from app.bot.service.spots.process_confirmation_spot_service import process_spot_cancel
+
 
 async def cancel_spot(query: CallbackQuery):
     """Обрабатывает отмену занятия места"""
@@ -31,35 +33,43 @@ async def cancel_spot(query: CallbackQuery):
                     return None
 
                 result = await find_spot_confirmations_by_user(cur, db_user_id)
-                print(result)
+                if not result:
+                    await query.message.edit_text("❌ Данные о месте устарели")
+                    return None
+
                 spot_confirmations = SpotConfirmationDTO(db_user_id=result[0],
                                                          tg_user_id=result[1],
                                                          spot_number=result[2],
                                                          assignment_date=result[3],
                                                          release_id=result[4],
                                                          request_id=result[5])
-                if not spot_confirmations:
-                    await query.message.edit_text("❌ Данные о месте устарели")
-                    return
 
                 await cancel_scheduled_cancellation(spot_confirmations)
 
-                success = await process_spot_cancel(spot_confirmations)
+                success = await process_spot_cancel(cur, spot_confirmations)
 
                 if success:
+                    await deactivate_spot_confirmations_by_user(cur, db_user_id)
+                    conn.commit()
+                    user_name = await get_user_full_mention(tg_user_id, True)
+                    await send_log_notification(
+                        LogNotification.INFO,
+                        f"Пользователь {user_name} отказался от места №{spot_confirmations.spot_number}"
+                    )
+
                     await query.message.edit_text(
                         f"ℹ️ Вы успешно отказались от места №{spot_confirmations.spot_number} "
                         f"на {spot_confirmations.assignment_date.strftime('%d.%m.%Y')}\n\n"
                         "️️⚠️ <i>Я больше не буду предлагать вам места на эту дату</i>",
                         reply_markup=return_markup
                     )
+                    await distribute_parking_spots()
                 else:
                     await query.message.edit_text(
                         "❌ Не удалось занять место. Возможно, оно уже занято.",
                         reply_markup=return_markup
                     )
 
-                await deactivate_spot_confirmations_by_user(cur, db_user_id)
     except psycopg2.Error as e:
         logging.error(DATABASE_ERROR.format(e))
         await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
@@ -70,5 +80,3 @@ async def cancel_spot(query: CallbackQuery):
             "❌ Произошла ошибка при отклонении места",
             reply_markup=return_markup
         )
-    finally:
-        await distribute_parking_spots()
