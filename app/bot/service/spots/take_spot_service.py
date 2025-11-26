@@ -15,7 +15,9 @@ from app.bot.keyboard_markup import return_markup
 from app.bot.notification.log_notification import send_log_notification
 from app.bot.service.user_service import get_db_user_id
 from app.data.init_db import get_db_connection
-from app.data.repository.parking_releases_repository import update_parking_releases, get_release_owner
+from app.data.repository.parking_releases_repository import update_parking_releases, get_release_owner, \
+    get_release_status_by_id
+from app.data.repository.parking_requests_repository import get_request_status_by_id
 from app.data.repository.spot_confirmations_repository import find_spot_confirmations_by_user, \
     deactivate_spot_confirmations_by_user
 from app.data.repository.users_repository import increment_user_rating
@@ -67,6 +69,8 @@ async def take_spot(query: CallbackQuery):
 
                 await increment_user_rating(cur, db_user_id)
 
+                request_status = await get_request_status_by_id(cur, spot_confirmations.request_id)
+                release_status = await get_release_status_by_id(cur, spot_confirmations.release_id)
                 conn.commit()
 
                 await query.message.edit_text(
@@ -76,7 +80,10 @@ async def take_spot(query: CallbackQuery):
                 )
                 logging.info(f"User {tg_user_id} successfully took spot #{spot_confirmations.spot_number}")
                 user_name = await get_user_full_mention(tg_user_id, True)
-                await send_log_notification(LogNotification.INFO, f"Пользователь {user_name} успешно занял место №{spot_confirmations.spot_number}")
+                await send_log_notification(LogNotification.INFO,
+                                            f"Пользователь {user_name} успешно занял место №{spot_confirmations.spot_number}\n"
+                                            f"release_status = {release_status}\n"
+                                            f"request_status = {request_status}")
 
 
     except psycopg2.Error as e:

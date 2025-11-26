@@ -19,7 +19,8 @@ from app.data.models.releases.parking_releases import ParkingReleaseStatus
 from app.data.models.requests.parking_requests import ParkingRequestStatus
 from app.data.repository.distribute_parking_spots_repository import get_candidates, get_dates_with_availability
 from app.data.repository.parking_releases_repository import update_parking_releases, get_release_owner, get_free_spots, \
-    is_spot_still_available
+    is_spot_still_available, get_release_status_by_id
+from app.data.repository.parking_requests_repository import get_request_status_by_id
 from app.data.repository.spot_confirmations_repository import insert_row_of_spot_confirmation
 from app.data.repository.users_repository import increment_user_rating
 from app.log_text import PARKING_DISTRIBUTION_ERROR, DATABASE_ERROR
@@ -66,6 +67,14 @@ async def distribute_parking_spots():
 
                         if not await is_spot_still_available(cur, release_id):
                             logging.warning(f"Spot {spot_id} no longer available, skipping")
+                            request_status = await get_request_status_by_id(cur, request_id)
+                            release_status = await get_release_status_by_id(cur, release_id)
+                            await send_log_notification(
+                                LogNotification.WARN,
+                                f"Spot {spot_id} no longer available, skipping\n"
+                                f"release_status = {release_status}\n"
+                                f"request_status = {request_status}"
+                            )
                             continue
 
                         if (distribution_date == today_date) and (datetime_now > today_9am):
@@ -82,9 +91,13 @@ async def distribute_parking_spots():
                             message_text = await to_user_about_found_spot(spot_confirmation_data)
                             await notify_user(tg_id, message_text, NotificationTypes.SPOT_FOUND)
                             user_name = await get_user_full_mention(tg_id, True)
+                            request_status = await get_request_status_by_id(cur, request_id)
+                            release_status = await get_release_status_by_id(cur, release_id)
                             await send_log_notification(
                                 LogNotification.INFO,
-                                f"Пользователю {user_name} предложено место №{spot_id}"
+                                f"Пользователю {user_name} предложено место №{spot_id}\n"
+                                f"release_status = {release_status}\n"
+                                f"request_status = {request_status}"
                             )
 
                         else:
@@ -107,9 +120,13 @@ async def distribute_parking_spots():
                             message_text = await to_user_about_assigned_spot(tg_id, spot_id, distribution_date)
                             await notify_user(tg_id, message_text)
                             user_name = await get_user_full_mention(tg_id, True)
+                            request_status = await get_request_status_by_id(cur, request_id)
+                            release_status = await get_release_status_by_id(cur, release_id)
                             await send_log_notification(
                                 LogNotification.INFO,
-                                f"Пользователю {user_name} отдано место №{spot_id}"
+                                f"Пользователю {user_name} отдано место №{spot_id}\n"
+                                f"release_status = {release_status}\n"
+                                f"request_status = {request_status}"
                             )
                             distributed_count += 1
 

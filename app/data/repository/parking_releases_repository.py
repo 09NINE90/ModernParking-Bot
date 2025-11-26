@@ -581,3 +581,13 @@ async def is_spot_still_available(cur, release_id: int) -> bool:
     except Exception as e:
         logging.error(f"Error checking spot availability: {e}")
         return False
+
+
+async def get_release_status_by_id(cur, release_id):
+    cur.execute(f'''
+                SELECT pr.status FROM {DB_SCHEMA}.parking_releases pr
+                WHERE pr.id = %s 
+                ''', (release_id,))
+
+    result = cur.fetchone()
+    return result[0] if result else None

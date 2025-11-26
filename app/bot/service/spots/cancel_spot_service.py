@@ -10,6 +10,8 @@ from app.bot.keyboard_markup import return_markup
 from app.bot.notification.log_notification import send_log_notification
 from app.bot.service.user_service import get_db_user_id
 from app.data.init_db import get_db_connection
+from app.data.repository.parking_releases_repository import get_release_status_by_id
+from app.data.repository.parking_requests_repository import get_request_status_by_id
 from app.data.repository.spot_confirmations_repository import find_spot_confirmations_by_user, \
     deactivate_spot_confirmations_by_user
 from app.log_text import SPOT_CANCEL_ERROR, DB_USER_ID_GET_ERROR, DATABASE_ERROR
@@ -50,11 +52,15 @@ async def cancel_spot(query: CallbackQuery):
 
                 if success:
                     await deactivate_spot_confirmations_by_user(cur, db_user_id)
-                    conn.commit()
                     user_name = await get_user_full_mention(tg_user_id, True)
+                    request_status = await get_request_status_by_id(cur, spot_confirmations.request_id)
+                    release_status = await get_release_status_by_id(cur, spot_confirmations.release_id)
+                    conn.commit()
                     await send_log_notification(
                         LogNotification.INFO,
-                        f"Пользователь {user_name} отказался от места №{spot_confirmations.spot_number}"
+                        f"Пользователь {user_name} отказался от места №{spot_confirmations.spot_number}\n"
+                        f"release_status = {release_status}\n"
+                        f"request_status = {request_status}"
                     )
 
                     await query.message.edit_text(
