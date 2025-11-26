@@ -15,10 +15,12 @@ async def send_log_notification(log_type: LogNotification, message):
 
         if log_type == LogNotification.INFO:
             message = message
+            parse_mode = ParseMode.HTML
         else:
             message = (f"```"
                        f"{message}"
                        f"```")
+            parse_mode = ParseMode.MARKDOWN
 
         message_text = (
             f"{datetime_now.strftime('%d.%m.%Y %H:%M:%S')}\n"
@@ -29,7 +31,7 @@ async def send_log_notification(log_type: LogNotification, message):
         await bot.send_message(
             chat_id=LOGS_CHANNEL_ID,
             text=message_text,
-            parse_mode=ParseMode.MARKDOWN
+            parse_mode=parse_mode
         )
         return True
     except Exception as e:
