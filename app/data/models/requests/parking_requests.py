@@ -10,6 +10,7 @@ from app.data.models.requests.requests_enum import ParkingRequestStatus
 @dataclass
 class ParkingRequest:
     id: str = None
+    spot_id: int = None
     user_id: str = None
     request_date: date = None
     status: ParkingRequestStatus = None

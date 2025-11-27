@@ -161,7 +161,7 @@ async def my_statistics(query: CallbackQuery):
                 accepted_spots_count = len(accepted_parking_requests)
 
                 results = await current_spots_request_by_user(cur, db_user_id, today.date())
-                current_spots_request = [ParkingRequest(status=row[0], request_date=row[1])
+                current_spots_request = [ParkingRequest(status=row[0], request_date=row[1], spot_id=row[2])
                                          for row in results]
 
                 results = await current_spots_releases_by_user(cur, db_user_id, today.date())
@@ -176,9 +176,12 @@ async def my_statistics(query: CallbackQuery):
                 if len(current_spots_request) > 0:
                     message_text += "\n<b>Ваши актуальные запросы на парковочные места:</b>\n"
                     for current_spot in current_spots_request:
+                        spot_info = ""
+                        if current_spot.spot_id:
+                            spot_info = f" <b>№{current_spot.spot_id}</b>"
                         emoji_status = await get_request_emoji_status(current_spot.status)
                         message_text += (f"📅 Дата: {current_spot.request_date.strftime('%d.%m.%Y')}\n"
-                                         f"{emoji_status} Статус: {current_spot.status.display_name}\n\n")
+                                         f"{emoji_status} Статус: {current_spot.status.display_name}{spot_info}\n\n")
                 else:
                     message_text += "\nУ вас пока что нет актуальных запросов на парковочные места\n"
 

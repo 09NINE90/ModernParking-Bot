@@ -319,7 +319,7 @@ async def get_tomorrow_accepted_spot(cur, date):
     return cur.fetchall()
 
 
-async def update_revoke_parking_release(cur, release_id, current_status: ParkingReleaseStatus):
+async def update_parking_release_set_free(cur, release_id, current_status: ParkingReleaseStatus):
     """
         Асинхронно обновляет запрос на освобождение места при отзыве.
 

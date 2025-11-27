@@ -153,13 +153,22 @@ async def current_spots_request_by_user(cur, user_id, request_date):
         - Функция асинхронная, требует await при вызове
     """
     cur.execute(f'''
-                SELECT pr.status, pr.request_date
-                FROM {DB_SCHEMA}.parking_requests pr
-                WHERE pr.user_id = %s
-                  AND pr.request_date >= %s
-                  AND (pr.status = 'ACCEPTED' OR pr.status = 'PENDING')
-                ORDER BY request_date DESC
-                ''', (user_id, request_date,))
+                  SELECT 
+                      pr.status, 
+                      pr.request_date,
+                      CASE 
+                          WHEN pr.status = 'ACCEPTED' THEN prel.spot_id
+                          ELSE NULL
+                      END as spot_id
+                  FROM {DB_SCHEMA}.parking_requests pr
+                  LEFT JOIN {DB_SCHEMA}.parking_releases prel 
+                      ON pr.user_id = prel.user_id_took
+                      AND pr.status = 'ACCEPTED'
+                  WHERE pr.user_id = %s
+                    AND pr.request_date >= %s
+                    AND (pr.status = 'ACCEPTED' OR pr.status = 'PENDING')
+                  ORDER BY request_date DESC
+                  ''', (user_id, request_date,))
 
     return cur.fetchall()
 
