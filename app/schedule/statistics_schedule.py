@@ -4,6 +4,7 @@ from app.bot.service.reminder_spot.spot_reminder_service import spot_reminder
 from app.bot.service.statistics_service import daily_statistics_service, weekly_statistics_service
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from app.bot.service.user_schedules.weekly_schedule_reminder_service import distribute_weekly_parking_schedules
 from app.data.service.update_statuses_service import update_statuses_service
 
 
@@ -33,12 +34,12 @@ def setup_scheduler():
         id='daily_evening_statistics'
     )
 
-    # Ежедневно в 18:30 todo изменить на 18:00
+    # Ежедневно в 18:00
     scheduler.add_job(
         spot_reminder,
         trigger=CronTrigger(
             hour=18,
-            minute=30
+            minute=00
         ),
         id='daily_user_reminder'
     )
@@ -62,6 +63,17 @@ def setup_scheduler():
             minute=5,
         ),
         id='daily_updating_statuses'
+    )
+
+    # Еженедельно в воскресение в 12:00
+    scheduler.add_job(
+        distribute_weekly_parking_schedules,
+        trigger=CronTrigger(
+            hour=14, # todo вернуть 12
+            minute=00,
+            day_of_week='thu'
+        ),
+        id='distribute_weekly_parking_schedules'
     )
 
     return scheduler

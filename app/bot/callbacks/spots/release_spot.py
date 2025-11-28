@@ -11,6 +11,7 @@ from app.bot.notification.log_notification import send_log_notification
 from app.bot.service.distribution_service import distribute_parking_spots
 from app.bot.keyboard_markup import return_markup, back_markup, date_list_markup
 from app.bot.service.user_service import get_db_user_id
+from app.bot.users.get_user_full_mention import get_user_full_mention
 from app.data.init_db import get_db_connection
 from app.bot.parking_states import ParkingStates
 from app.data.repository.parking_releases_repository import insert_spot_on_date, get_user_id_took_by_date_and_spot, \
@@ -193,6 +194,10 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
                         f"✅ Отлично! Вы освободили место №{spot_num} на {release_date.strftime('%d.%m.%Y')}",
                         reply_markup=return_markup
                     )
+                    user_name = await get_user_full_mention(tg_user_id, True)
+                    await send_log_notification(LogNotification.INFO,
+                                                f"Пользователь {user_name} успешно освободил место №{spot_number}")
+
                     await distribute_parking_spots()
                 else:
                     await query.message.edit_text(

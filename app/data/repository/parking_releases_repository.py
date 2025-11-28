@@ -1,3 +1,5 @@
+import logging
+
 from app.data.db_config import DB_SCHEMA
 from app.data.models.releases.releases_enum import ParkingReleaseStatus
 
@@ -317,7 +319,7 @@ async def get_tomorrow_accepted_spot(cur, date):
     return cur.fetchall()
 
 
-async def update_revoke_parking_release(cur, release_id, current_status: ParkingReleaseStatus):
+async def update_parking_release_set_free(cur, release_id, current_status: ParkingReleaseStatus):
     """
         Асинхронно обновляет запрос на освобождение места при отзыве.
 
@@ -566,3 +568,26 @@ async def get_user_releases_dates(cur, user_id, spot_number, from_date):
                     AND release_date >= %s
                 ''', (user_id, spot_number, from_date,))
     return cur.fetchall()
+
+async def is_spot_still_available(cur, release_id: int) -> bool:
+    """Проверяет, что место все еще доступно для распределения"""
+    try:
+        cur.execute(f"""
+            SELECT status FROM {DB_SCHEMA}.parking_releases 
+            WHERE id = %s 
+                AND status = 'PENDING'
+        """, (release_id,))
+        return cur.fetchone() is not None
+    except Exception as e:
+        logging.error(f"Error checking spot availability: {e}")
+        return False
+
+
+async def get_release_status_by_id(cur, release_id):
+    cur.execute(f'''
+                SELECT pr.status FROM {DB_SCHEMA}.parking_releases pr
+                WHERE pr.id = %s 
+                ''', (release_id,))
+
+    result = cur.fetchone()
+    return result[0] if result else None

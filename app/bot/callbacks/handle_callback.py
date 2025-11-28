@@ -2,6 +2,14 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from app.bot.callbacks.back_to_main_menu import back_to_main_menu
+from app.bot.callbacks.default_schedule.handle_add_day import handle_add_day
+from app.bot.callbacks.default_schedule.handle_cancel_schedule_selection import handle_cancel_schedule_selection
+from app.bot.callbacks.default_schedule.handle_create_default_schedule import handle_create_default_schedule
+from app.bot.callbacks.default_schedule.handle_delete_default_schedule import handle_delete_default_schedule
+from app.bot.callbacks.default_schedule.handle_confirmation_delete_schedule_by_id import handle_confirmation_delete_schedule_by_id
+from app.bot.callbacks.default_schedule.handle_delete_schedule_by_id import handle_delete_schedule_by_id
+from app.bot.callbacks.default_schedule.handle_save_schedule import handle_save_schedule
+from app.bot.callbacks.default_schedule.handle_select_shedule import handle_select_schedule
 from app.bot.callbacks.spots.handle_cancel_spot import handle_cancel_spot
 from app.bot.callbacks.handle_feedback import handle_feedback
 from app.bot.callbacks.handle_my_statistics import handle_my_statistics
@@ -93,3 +101,33 @@ async def handle_callback(query: CallbackQuery, state: FSMContext):
         case "my_statistics":
             await state.clear()
             await handle_my_statistics(query)
+
+        case "create_default_schedule":
+            await state.clear()
+            await handle_create_default_schedule(query, state)
+
+        case str() if data.startswith("add_day_"):
+            day = data.replace("add_day_", "")
+            await handle_add_day(query, state, day)
+
+        case "save_schedule":
+            await handle_save_schedule(query, state)
+
+        case "delete_default_schedule":
+            await state.clear()
+            await handle_delete_default_schedule(query, state)
+
+        case str() if data.startswith("del_"):
+            schedule_id = data.replace("del_", "")
+            await handle_confirmation_delete_schedule_by_id(query, state, schedule_id)
+
+        case str() if data.startswith("yes_del_"):
+            schedule_id = data.replace("yes_del_", "")
+            await handle_delete_schedule_by_id(query, state, schedule_id)
+
+        case str() if data.startswith("select_"):
+            schedule_id = data.replace("select_", "")
+            await handle_select_schedule(query, state, schedule_id)
+
+        case "cancel_schedule_selection":
+            await handle_cancel_schedule_selection(query, state)
