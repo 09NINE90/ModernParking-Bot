@@ -69,9 +69,9 @@ def setup_scheduler():
     scheduler.add_job(
         distribute_weekly_parking_schedules,
         trigger=CronTrigger(
-            hour=14, # todo вернуть 12
+            hour=12,
             minute=00,
-            day_of_week='thu'
+            day_of_week='sun'
         ),
         id='distribute_weekly_parking_schedules'
     )
