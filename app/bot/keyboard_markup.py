@@ -60,8 +60,8 @@ main_keyboard = [
         InlineKeyboardButton(text="🚗 Запросить место", callback_data="request_spot"),
         InlineKeyboardButton(text="Отозвать запрос", callback_data="revoke_request")
     ],
-    # [InlineKeyboardButton(text="📝 Создать расписание", callback_data="create_default_schedule")],
-    # [InlineKeyboardButton(text="🗑 Удалить расписание", callback_data="delete_default_schedule")]
+    [InlineKeyboardButton(text="📝 Создать расписание", callback_data="create_default_schedule")],
+    [InlineKeyboardButton(text="🗑 Удалить расписание", callback_data="delete_default_schedule")]
 ]
 main_markup = InlineKeyboardMarkup(inline_keyboard=main_keyboard)
 

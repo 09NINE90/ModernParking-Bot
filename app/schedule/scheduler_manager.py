@@ -53,7 +53,7 @@ async def schedule_reminder_cancellation(reminder_data: ParkingReminder, delay_h
     return run_time
 
 
-async def schedule_distribute_weekly_parking_schedules(tg_id, message_id, delay_hours=10): # todo вернуть 12 после тестов
+async def schedule_distribute_weekly_parking_schedules(tg_id, message_id, delay_hours=12):
     scheduler = get_scheduler()
 
     run_time = datetime.now() + timedelta(hours=delay_hours)

@@ -152,6 +152,7 @@ def is_has_available_dates(existing_dates, today):
 
     return available_dates
 
+
 async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMContext):
     """
     Обрабатывает освобождение парковочного места пользователем на указанную дату.
