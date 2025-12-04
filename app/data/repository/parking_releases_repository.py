@@ -569,7 +569,7 @@ async def get_user_releases_dates(cur, user_id, spot_number, from_date):
                 ''', (user_id, spot_number, from_date,))
     return cur.fetchall()
 
-async def is_spot_still_available(cur, release_id: int) -> bool:
+async def is_spot_still_available(cur, release_id) -> bool:
     """Проверяет, что место все еще доступно для распределения"""
     try:
         cur.execute(f"""

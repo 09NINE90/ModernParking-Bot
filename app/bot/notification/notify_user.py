@@ -18,12 +18,12 @@ async def notify_user(tg_user_id: int, message_text, notification_type: Notifica
         markup = return_markup
 
     try:
-        await bot.send_message(
+        sent_message = await bot.send_message(
             chat_id=tg_user_id,
             text=message_text,
             reply_markup=markup
         )
-        return True
+        return sent_message.message_id
     except Exception as e:
         logging.error(USER_NOTIFICATION_ERROR.format(tg_user_id, e))
         await send_log_notification(LogNotification.ERROR, USER_NOTIFICATION_ERROR.format(tg_user_id, e))

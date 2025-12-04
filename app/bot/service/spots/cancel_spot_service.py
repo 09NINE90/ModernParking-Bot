@@ -55,6 +55,9 @@ async def cancel_spot(query: CallbackQuery):
                     user_name = await get_user_full_mention(tg_user_id, True)
                     request_status = await get_request_status_by_id(cur, spot_confirmations.request_id)
                     release_status = await get_release_status_by_id(cur, spot_confirmations.release_id)
+
+                    conn.commit()
+
                     await send_log_notification(
                         LogNotification.INFO,
                         f"Пользователь {user_name} отказался от места №{spot_confirmations.spot_number}\n"
@@ -68,7 +71,6 @@ async def cancel_spot(query: CallbackQuery):
                         "️️⚠️ <i>Я больше не буду предлагать вам места на эту дату</i>",
                         reply_markup=return_markup
                     )
-                    conn.commit()
                     await distribute_parking_spots()
                 else:
                     await query.message.edit_text(
