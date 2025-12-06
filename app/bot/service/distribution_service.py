@@ -21,7 +21,7 @@ from app.data.repository.distribute_parking_spots_repository import get_candidat
 from app.data.repository.parking_releases_repository import update_parking_releases, get_release_owner, get_free_spots, \
     is_spot_still_available, get_release_status_by_id
 from app.data.repository.parking_requests_repository import get_request_status_by_id
-from app.data.repository.spot_confirmations_repository import insert_row_of_spot_confirmation
+from app.data.repository.spot_confirmations_repository import insert_row_of_spot_confirmation, set_message_sent_id
 from app.data.repository.users_repository import increment_user_rating
 from app.log_text import PARKING_DISTRIBUTION_ERROR, DATABASE_ERROR
 
@@ -86,13 +86,17 @@ async def distribute_parking_spots():
                             spot_confirmation_data = SpotConfirmationDTO(
                                 str(user_id), tg_id, spot_id, distribution_date, release_id, request_id
                             )
-                            await insert_row_of_spot_confirmation(cur, user_id, release_id, request_id)
+                            spot_confirmation_id = await insert_row_of_spot_confirmation(cur, user_id, release_id, request_id)
 
                             message_text = await to_user_about_found_spot(spot_confirmation_data)
-                            await notify_user(tg_id, message_text, NotificationTypes.SPOT_FOUND)
+                            message_id = await notify_user(tg_id, message_text, NotificationTypes.SPOT_FOUND)
+
+                            await set_message_sent_id(cur, spot_confirmation_id, message_id)
+
                             user_name = await get_user_full_mention(tg_id, True)
                             request_status = await get_request_status_by_id(cur, request_id)
                             release_status = await get_release_status_by_id(cur, release_id)
+
                             await send_log_notification(
                                 LogNotification.INFO,
                                 f"Пользователю {user_name} предложено место №{spot_id}\n"

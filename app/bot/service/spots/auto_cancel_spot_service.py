@@ -3,11 +3,13 @@ import logging
 import psycopg2
 
 from app.bot.constants.log_types import LogNotification
+from app.bot.notification.delete_message import delete_message
 from app.bot.notification.log_notification import send_log_notification
 from app.bot.notification.messages.to_user_about_time_confirmation_spent import to_user_about_time_confirmation_spent
 from app.bot.notification.notify_user import notify_user
 from app.bot.service.spots.process_confirmation_spot_service import process_spot_cancel
 from app.data.init_db import get_db_connection
+from app.data.repository.spot_confirmations_repository import get_message_sent_id
 from app.log_text import AUTO_CANCEL_SPOT_ERROR, AUTO_CANCEL_SPOT_FAILED, DATABASE_ERROR
 
 
@@ -17,16 +19,29 @@ async def auto_cancel_spot(confirmation_data):
     """
     try:
         logging.debug(f"Auto-canceling spot for user {confirmation_data.tg_user_id}, "
-                     f"spot №{confirmation_data.spot_number} on {confirmation_data.assignment_date}")
+                      f"spot №{confirmation_data.spot_number} on {confirmation_data.assignment_date}")
 
         try:
             with get_db_connection() as conn:
                 with conn.cursor() as cur:
                     success = await process_spot_cancel(cur, confirmation_data)
+                    message_sent_id = await get_message_sent_id(
+                        cur=cur,
+                        user_id=confirmation_data.db_user_id,
+                        request_id=confirmation_data.request_id,
+                        release_id=confirmation_data.release_id,
+                    )
 
+                    conn.commit()
                     if success:
                         message_text = await to_user_about_time_confirmation_spent(confirmation_data)
                         await notify_user(confirmation_data.tg_user_id, message_text)
+
+                        if message_sent_id:
+                            await delete_message(
+                                chat_id=confirmation_data.tg_user_id,
+                                message_id=message_sent_id,
+                            )
 
                         from app.bot.service.distribution_service import distribute_parking_spots
                         await distribute_parking_spots()

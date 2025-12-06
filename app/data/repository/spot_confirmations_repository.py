@@ -1,3 +1,5 @@
+import logging
+
 from app.data.db_config import DB_SCHEMA
 
 
@@ -24,7 +26,48 @@ async def insert_row_of_spot_confirmation(cur, user_id, release_id, request_id):
     cur.execute(f"""
                 INSERT INTO {DB_SCHEMA}.spot_confirmations (user_id, release_id, request_id)
                 VALUES (%s, %s, %s)
+                RETURNING id
                 """, (user_id, release_id, request_id,))
+
+    result = cur.fetchone()
+    if result:
+        return result[0]
+    else:
+        return None
+
+
+async def set_message_sent_id(cur, spot_confirmation_id, message_sent_id):
+    try:
+        cur.execute(f"""
+                            UPDATE {DB_SCHEMA}.spot_confirmations
+                            SET message_sent_id = %s
+                            WHERE id = %s
+                            """,
+                    (message_sent_id, spot_confirmation_id,))
+    except Exception as e:
+        logging.error(e)
+        return None
+
+
+async def get_message_sent_id(cur, user_id, release_id, request_id):
+    try:
+        cur.execute(f"""
+                                SELECT message_sent_id 
+                                FROM {DB_SCHEMA}.spot_confirmations 
+                                WHERE user_id = %s 
+                                    AND release_id = %s 
+                                    AND request_id = %s
+                                """,
+                    (user_id, release_id, request_id,))
+
+        result = cur.fetchone()
+        if result and result[0] is not None:
+            return result[0]
+        return None
+    except Exception as e:
+        logging.error(e)
+        return None
+
 
 async def find_spot_confirmations_by_user(cur, user_id):
     """
@@ -66,6 +109,7 @@ async def find_spot_confirmations_by_user(cur, user_id):
                 """, (user_id,))
 
     return cur.fetchone()
+
 
 async def deactivate_spot_confirmations_by_user(cur, user_id):
     """
