@@ -1,8 +1,8 @@
-from app.data.models.spot_reminder.parking_reminder_dto import ParkingReminder
-from app.schedule.scheduler_manager import schedule_reminder_cancellation
+from app.data.models import ParkingReminder
 
 
 async def to_remind_user_of_spot(remind_data: ParkingReminder):
+    from app.scheduler.scheduler_manager import schedule_reminder_cancellation
     cancel_time = await schedule_reminder_cancellation(reminder_data=remind_data)
 
     message_text = (

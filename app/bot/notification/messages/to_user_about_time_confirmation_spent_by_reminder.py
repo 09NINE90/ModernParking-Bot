@@ -1,5 +1,5 @@
-from app.bot.users.get_user_full_mention import get_user_full_mention
-from app.data.models.spot_reminder.parking_reminder_dto import ParkingReminder
+from app.bot.utils import get_user_full_mention
+from app.data.models import ParkingReminder
 
 
 async def to_user_about_time_confirmation_spent_by_reminder(reminder_data: ParkingReminder):

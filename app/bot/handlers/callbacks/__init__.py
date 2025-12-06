@@ -1,0 +1,28 @@
+from aiogram import Dispatcher, Router
+
+
+def setup_callbacks(dp: Dispatcher) -> None:
+    """
+        Настройка всех callback обработчиков
+    """
+    # Создаем основной router для callback запросов
+    callback_router = Router()
+
+    from .base import setup_base_callbacks
+    from .spots import setup_spots_callbacks
+    from .found_spot import setup_found_spot_callbacks
+    from .revoke import setup_revoke_callbacks
+    from .my_statistics import setup_statistics_callbacks
+
+    setup_base_callbacks(callback_router)
+    setup_spots_callbacks(callback_router)
+    setup_found_spot_callbacks(callback_router)
+    setup_revoke_callbacks(callback_router)
+    setup_statistics_callbacks(callback_router)
+
+    dp.include_router(callback_router)
+
+
+__all__ = [
+    'setup_callbacks'
+]
