@@ -9,9 +9,6 @@ from app.services.user_service import UserService
 
 
 async def help_command(message: types.Message):
-    await log(
-        log_type=LogType.INFO,
-    )
     if message.chat.id == settings.GROUP_ID:
         return
 

@@ -44,3 +44,6 @@ class StatisticsService:
                 for row in results
             ]
         return []
+
+    def get_all_statistics_by_all_time(self):
+        return self.repository.get_all_statistics_by_all_time()

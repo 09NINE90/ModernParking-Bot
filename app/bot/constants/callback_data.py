@@ -23,6 +23,7 @@ class CallbackData:
     SELECT_PREFIX = "select_"
 
     # Обратная связь
+    FEEDBACK_PREFIX = "feedback_"
     FEEDBACK_ERROR = "feedback_error"
     FEEDBACK_IDEA = "feedback_idea"
     FEEDBACK_FEEDBACK = "feedback_feedback"

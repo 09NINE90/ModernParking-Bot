@@ -86,3 +86,6 @@ class UserService:
 
     def update_user_rating_by_user_id(self, db_user_id, delta: int):
         return self.repository.update_user_rating_by_user_id(db_user_id, delta)
+
+    def is_user_admin(self, tg_user_id: int) -> bool:
+        return self.repository.is_user_admin(tg_user_id)

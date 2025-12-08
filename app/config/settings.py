@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     # Bot
     BOT_TOKEN: str
     GROUP_ID: int
-    FEEDBACK_CHANNEL_ID: int
     DELAY_MINUTES_CONFIRM_SPOT: int = 5
 
     TECH_GROUP_ID: int
@@ -19,6 +18,7 @@ class Settings(BaseSettings):
     INFO_TOPIC_ID: int
     DEBUG_TOPIC_ID: int
     STATS_TOPIC_ID: int
+    FEEDBACK_TOPIC_ID: int
 
     # Database
     DB_NAME: str

@@ -179,3 +179,67 @@ class StatisticsRepository:
                             f"и освобождениям за указанный период {start_date}-{end_date}: {e}"
             )
             return None
+
+    def get_all_statistics_by_all_time(self):
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(
+                    f'''
+                            WITH request_stats AS (
+                                SELECT 
+                                    COUNT(*) as total,
+                                    COUNT(*) FILTER (WHERE status = 'ACCEPTED') as accepted,
+                                    COUNT(*) FILTER (WHERE status = 'PENDING') as pending,
+                                    COUNT(*) FILTER (WHERE status = 'CANCELED') as canceled,
+                                    COUNT(*) FILTER (WHERE status = 'NOT_FOUND') as not_found,
+                                    COUNT(*) FILTER (WHERE status = 'WAITING_CONFIRMATION') as waiting_confirmation
+                                FROM {settings.DB_SCHEMA}.parking_requests
+                            ),
+                            release_stats AS (
+                                SELECT 
+                                    COUNT(*) as total,
+                                    COUNT(*) FILTER (WHERE status = 'ACCEPTED') as accepted,
+                                    COUNT(*) FILTER (WHERE status = 'PENDING') as pending,
+                                    COUNT(*) FILTER (WHERE status = 'CANCELED') as canceled,
+                                    COUNT(*) FILTER (WHERE status = 'NOT_FOUND') as not_found,
+                                    COUNT(*) FILTER (WHERE status = 'WAITING') as waiting
+                                FROM {settings.DB_SCHEMA}.parking_releases
+                            )
+                            SELECT 
+                                rs.total, rs.accepted, rs.pending, rs.canceled, rs.not_found, rs.waiting_confirmation,
+                                rels.total, rels.accepted,  rels.pending, rels.canceled, rels.not_found, rels.waiting
+                            FROM request_stats rs, release_stats rels
+                        '''
+                )
+
+                stats = cur.fetchone()
+                if not stats:
+                    return []
+
+                return {
+                    'requests': {
+                        'total': stats[0],
+                        'accepted': stats[1],
+                        'pending': stats[2],
+                        'canceled': stats[3],
+                        'not_found': stats[4],
+                        'waiting_confirmation': stats[5],
+                        'acceptance_rate': round((stats[1] / stats[0] * 100), 2) if stats[0] > 0 else 0,
+                        'cancel_rate': round((stats[3] / stats[0] * 100), 2) if stats[0] > 0 else 0
+                    },
+                    'releases': {
+                        'total': stats[6],
+                        'accepted': stats[7],
+                        'pending': stats[8],
+                        'canceled': stats[9],
+                        'not_found': stats[10],
+                        'waiting': stats[11],
+                        'acceptance_rate': round((stats[7] / stats[6] * 100), 2) if stats[6] > 0 else 0,
+                        'cancel_rate': round((stats[9] / stats[6] * 100), 2) if stats[6] > 0 else 0
+                    },
+                }
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка получения полной статистики по запросам и освобождениям: {e}"
+            )
+            return None
