@@ -44,16 +44,16 @@ class SpotRequestRepository:
             )
             return False
 
-    def insert_request_on_date(self, db_user_id, request_date):
+    def insert_request_on_date(self, db_user_id, request_date, is_auto_request):
         try:
             with self._get_cursor() as cur:
                 cur.execute(f'''
                                 INSERT INTO {settings.DB_SCHEMA}.parking_requests
-                                    (id, user_id, request_date)
-                                VALUES (gen_random_uuid(), %s, %s)
+                                    (id, user_id, request_date, is_auto_request)
+                                VALUES (gen_random_uuid(), %s, %s, %s)
                                 ON CONFLICT (user_id, request_date) DO NOTHING
                                 RETURNING id
-                                ''', (db_user_id, request_date))
+                                ''', (db_user_id, request_date, is_auto_request))
 
                 return cur.fetchone() is not None
         except Exception as e:

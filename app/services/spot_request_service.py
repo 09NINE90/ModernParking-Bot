@@ -15,7 +15,8 @@ class SpotRequestService:
     def create_user_spot_request(
             self,
             db_user_id: str,
-            request_date: date
+            request_date: date,
+            is_auto_request: bool = False
     ) -> bool:
         """
         Создает запрос на парковочное место
@@ -26,8 +27,11 @@ class SpotRequestService:
         try:
 
             return self.repository.insert_request_on_date(
-                db_user_id, request_date
+                db_user_id=db_user_id,
+                request_date=request_date,
+                is_auto_request=is_auto_request
             )
+
 
         except Exception as e:
             log_sync(log_message=f"Ошибка создания освобождения места: {e}")

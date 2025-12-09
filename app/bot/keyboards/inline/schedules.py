@@ -1,6 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from app.bot.constants.callback_data import CallbackData
 from app.constants import full_weekdays_ru, get_readable_schedule
 from app.data.models.dto.schedule_dto import ScheduleDto
 
@@ -22,16 +23,16 @@ def create_default_schedule_markup(selected_days: list[str] = None) -> InlineKey
             continue
         builder.button(
             text=f"{day}",
-            callback_data=f"add_day_{day}"
+            callback_data=f"{CallbackData.ADD_DAY_PREFIX}{day}"
         )
 
     if selected_days:
         builder.button(
             text="💾 Сохранить",
-            callback_data="save_schedule"
+            callback_data=CallbackData.SAVE_SCHEDULE
         )
 
-    builder.button(text="🔙 Назад", callback_data="back_to_main")
+    builder.button(text="🔙 Назад", callback_data=CallbackData.BACK_TO_MAIN)
     builder.adjust(1)
     return builder.as_markup()
 
@@ -49,12 +50,12 @@ def create_delete_schedules_keyboard(schedules: list[ScheduleDto]) -> InlineKeyb
         day_names = get_readable_schedule(schedule.day_numbers)
         builder.button(
             text=f"{day_names}",
-            callback_data=f"del_{schedule.id}"
+            callback_data=f"{CallbackData.DEL_PREFIX}{schedule.id}"
         )
 
     builder.button(
         text="🔙 Назад",
-        callback_data="back_to_main"
+        callback_data=CallbackData.BACK_TO_MAIN
     )
 
     builder.adjust(1)
@@ -72,11 +73,11 @@ def confirmation_delete_schedule_markup(schedule_id: str) -> InlineKeyboardMarku
 
     builder.button(
         text="✅ Да, удалить",
-        callback_data=f"yes_del_{schedule_id}"
+        callback_data=f"{CallbackData.YES_DEL_PREFIX}{schedule_id}"
     )
     builder.button(
         text="❌ Отмена",
-        callback_data="delete_default_schedule"
+        callback_data=CallbackData.DELETE_DEFAULT_SCHEDULE
     )
 
     builder.adjust(2)
@@ -97,12 +98,12 @@ def schedule_selection_markup(schedules: list[dict]) -> InlineKeyboardMarkup:
         day_names = schedule['short_day_names']
         builder.button(
             text=f"{day_names}",
-            callback_data=f"select_{schedule_id}"
+            callback_data=f"{CallbackData.SELECT_PREFIX}{schedule_id}"
         )
 
     builder.button(
         text="Спасибо, не надо",
-        callback_data="cancel_schedule_selection"
+        callback_data=CallbackData.CANCEL_SCHEDULE_SELECTION
     )
     builder.adjust(1)
     return builder.as_markup()

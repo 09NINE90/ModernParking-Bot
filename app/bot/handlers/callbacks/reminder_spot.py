@@ -2,7 +2,8 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery
 
 from app.bot.constants.callback_data import CallbackData
-from app.bot.handlers.callbacks.utils.confirmations.reminder_spot_util import take_spot_by_reminder
+from app.bot.handlers.callbacks.utils.confirmations.reminder_spot_util import take_spot_by_reminder, \
+    cancel_spot_by_reminder
 from app.bot.keyboards import back_to_main_markup
 from app.logs.log_builder import log
 

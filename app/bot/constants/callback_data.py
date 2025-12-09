@@ -21,6 +21,7 @@ class CallbackData:
     DEL_PREFIX = "del_"
     YES_DEL_PREFIX = "yes_del_"
     SELECT_PREFIX = "select_"
+    CANCEL_SCHEDULE_SELECTION = "cancel_schedule_selection"
 
     # Обратная связь
     FEEDBACK_PREFIX = "feedback_"

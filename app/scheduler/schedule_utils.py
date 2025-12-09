@@ -61,3 +61,23 @@ async def cancel_scheduled_cancellation_by_reminder(reminder_data: ParkingRemind
     except Exception as e:
         await log(log_message=f"Error cancelling scheduled job: {e}")
         return False
+
+
+async def cancel_schedule_distribute_weekly_parking_schedules(tg_id):
+    """
+        Отменяет запланированную автоматическую отмену завершения распределения расписания
+    """
+    try:
+        scheduler = get_scheduler()
+        job_id = f"auto_cancel_distribute_weekly_parking_{tg_id}"
+
+        job = scheduler.get_job(job_id)
+        if job:
+            scheduler.remove_job(job_id)
+            logging.debug(f"Cancelled scheduled job: {job_id}")
+            return True
+        return False
+
+    except Exception as e:
+        await log(log_message=f"Error cancelling scheduled job: {e}")
+        return False

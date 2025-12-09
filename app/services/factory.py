@@ -1,8 +1,9 @@
 from app.repositories import UserRepository, SpotReleaseRepository, SpotRequestRepository, SpotConfirmationRepository, \
-    StatisticsRepository, ReminderSpotRepository
+    StatisticsRepository, ReminderSpotRepository, SpotRequestsScheduleRepository
 from app.services.reminder_spot_service import ReminderSpotService
 from app.services.spot_confirmation_service import SpotConfirmationService
 from app.services.spot_request_service import SpotRequestService
+from app.services.spot_requests_schedule_service import SpotRequestsScheduleService
 from app.services.statistics_service import StatisticsService
 from app.services.user_service import UserService
 from app.services.spot_release_service import SpotReleaseService
@@ -43,3 +44,8 @@ class ServiceFactory:
     def create_reminder_spot_service(connection) -> ReminderSpotService:
         repository = ReminderSpotRepository(connection)
         return ReminderSpotService(repository)
+
+    @staticmethod
+    def create_spot_requests_schedule_service(connection) -> SpotRequestsScheduleService:
+        repository = SpotRequestsScheduleRepository(connection)
+        return SpotRequestsScheduleService(repository)

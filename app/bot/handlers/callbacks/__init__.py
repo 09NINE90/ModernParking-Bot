@@ -14,6 +14,7 @@ def setup_callbacks(dp: Dispatcher) -> None:
     from .revoke import setup_revoke_callbacks
     from .my_statistics import setup_statistics_callbacks
     from .feedback import setup_feedback_callbacks
+    from .default_schedule import setup_default_schedule_callbacks
 
     setup_base_callbacks(callback_router)
     setup_spots_callbacks(callback_router)
@@ -21,6 +22,7 @@ def setup_callbacks(dp: Dispatcher) -> None:
     setup_revoke_callbacks(callback_router)
     setup_statistics_callbacks(callback_router)
     setup_feedback_callbacks(callback_router)
+    setup_default_schedule_callbacks(callback_router)
 
     dp.include_router(callback_router)
 

@@ -2,6 +2,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.utils.daily_statistics_util import get_daily_statistics
+from app.utils.distribute_weekly_schedules_util import distribute_weekly_schedules
 from app.utils.spot_reminder_util import spot_reminder
 from app.utils.update_statuses_util import update_statuses
 from app.utils.weekly_statistics_util import get_weekly_statistics
@@ -65,15 +66,15 @@ def setup_scheduler() -> AsyncIOScheduler:
         id='daily_updating_statuses'
     )
 
-    # # Еженедельно в воскресение в 12:00
-    # scheduler.add_job(
-    #     distribute_weekly_parking_schedules,
-    #     trigger=CronTrigger(
-    #         hour=12,
-    #         minute=00,
-    #         day_of_week='sun'
-    #     ),
-    #     id='distribute_weekly_parking_schedules'
-    # )
+    # Еженедельно в воскресение в 12:00
+    scheduler.add_job(
+        distribute_weekly_schedules,
+        trigger=CronTrigger(
+            hour=12,
+            minute=00,
+            day_of_week='sun'
+        ),
+        id='distribute_weekly_parking_schedules'
+    )
 
     return scheduler

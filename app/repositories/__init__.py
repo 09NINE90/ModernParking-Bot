@@ -4,6 +4,7 @@ from .spot_release_repository import SpotReleaseRepository
 from .spot_request_repository import SpotRequestRepository
 from .statistics_repository import StatisticsRepository
 from .reminder_spot_repository import ReminderSpotRepository
+from .spot_requests_schedule_repository import SpotRequestsScheduleRepository
 
 __all__ = [
     'UserRepository',
@@ -12,4 +13,5 @@ __all__ = [
     'SpotRequestRepository',
     'StatisticsRepository',
     'ReminderSpotRepository',
+    'SpotConfirmationRepository',
 ]
