@@ -36,7 +36,7 @@ async def insert_request_on_date(cur, db_user_id, request_date):
     return cur.fetchone()
 
 
-async def parking_requests_by_week(cur, status, monday_date, friday_date):
+async def parking_requests_between_two_dates(cur, status, first_day, last_day):
     """
     Асинхронно получает заявки на парковку за указанную неделю по заданному статусу.
 
@@ -46,8 +46,8 @@ async def parking_requests_by_week(cur, status, monday_date, friday_date):
     Параметры:
         cur: курсор базы данных для выполнения SQL-запросов
         status: статус заявок для фильтрации (например, 'ACCEPTED', 'CANCELED', 'NOT_FOUND')
-        monday_date: дата понедельника (начало периода, включительно)
-        friday_date: дата пятницы (конец периода, включительно)
+        first_day: дата понедельника (начало периода, включительно)
+        last_day: дата пятницы (конец периода, включительно)
 
     Возвращает:
         list: список кортежей со всеми полями заявок на парковку, удовлетворяющих условиям
@@ -64,10 +64,37 @@ async def parking_requests_by_week(cur, status, monday_date, friday_date):
                 WHERE pr.status = %s
                   AND pr.request_date >= %s
                   AND pr.request_date <= %s
-                ''', (status, monday_date, friday_date))
+                ''', (status, first_day, last_day))
 
     return cur.fetchall()
 
+
+async def get_parking_requests_statistics_for_period(cur, start_date, end_date):
+    """
+    Получает статистику по запросам парковочных мест за указанный период
+    """
+    cur.execute(f'''
+        SELECT 
+            COUNT(*) as total,
+            COUNT(*) FILTER (WHERE status = 'ACCEPTED') as accepted,
+            COUNT(*) FILTER (WHERE status = 'PENDING') as pending,
+            COUNT(*) FILTER (WHERE status = 'CANCELED') as canceled,
+            COUNT(*) FILTER (WHERE status = 'NOT_FOUND') as not_found,
+            COUNT(*) FILTER (WHERE status = 'WAITING_CONFIRMATION') as waiting_confirmation
+        FROM {DB_SCHEMA}.parking_requests 
+        WHERE request_date BETWEEN %s AND %s
+    ''', (start_date, end_date))
+
+    stats = cur.fetchone()
+
+    return {
+        'total': stats[0],
+        'accepted': stats[1],
+        'pending': stats[2],
+        'canceled': stats[3],
+        'not_found': stats[4],
+        'waiting_confirmation': stats[5]
+    }
 
 async def all_parking_requests_by_status_and_user(cur, status, user_id):
     """
@@ -126,15 +153,25 @@ async def current_spots_request_by_user(cur, user_id, request_date):
         - Функция асинхронная, требует await при вызове
     """
     cur.execute(f'''
-                SELECT pr.status, pr.request_date
-                FROM {DB_SCHEMA}.parking_requests pr
-                WHERE pr.user_id = %s
-                  AND pr.request_date >= %s
-                  AND (pr.status = 'ACCEPTED' OR pr.status = 'PENDING')
-                ORDER BY request_date DESC
-                ''', (user_id, request_date,))
+                  SELECT 
+                      pr.status, 
+                      pr.request_date,
+                      CASE 
+                          WHEN pr.status = 'ACCEPTED' THEN prel.spot_id
+                          ELSE NULL
+                      END as spot_id
+                  FROM {DB_SCHEMA}.parking_requests pr
+                  LEFT JOIN {DB_SCHEMA}.parking_releases prel 
+                      ON pr.user_id = prel.user_id_took
+                      AND pr.status = 'ACCEPTED'
+                  WHERE pr.user_id = %s
+                    AND pr.request_date >= %s
+                    AND (pr.status = 'ACCEPTED' OR pr.status = 'PENDING')
+                  ORDER BY request_date DESC
+                  ''', (user_id, request_date,))
 
     return cur.fetchall()
+
 
 async def find_user_requests_for_revoke(cur, db_user_id, date):
     """
@@ -179,6 +216,7 @@ async def find_user_requests_for_revoke(cur, db_user_id, date):
                 ''', (db_user_id, date,))
 
     return cur.fetchall()
+
 
 async def find_request_for_confirm_revoke(cur, db_user_id, request_id):
     """
@@ -255,3 +293,46 @@ async def update_parking_request_status(cur, request_id, current_status: Parking
                     processed_at = CURRENT_TIMESTAMP
                 WHERE id = %s
                 ''', (current_status.name, request_id,))
+
+
+async def get_user_request_dates(cur, user_id, from_date):
+    """
+        Получает список дат, на которые пользователь уже создал запросы на парковку.
+
+        Возвращает все даты начиная с указанной, для которых у пользователя есть
+        активные запросы в системе.
+
+        Параметры:
+            cur: курсор базы данных для выполнения SQL-запросов
+            user_id: UUID пользователя в таблице users
+            from_date: начальная дата для поиска (включительно)
+
+        Логика:
+            - Выбирает все даты запросов пользователя начиная с указанной даты
+            - Включает запросы с любым статусом (PENDING, ACCEPTED, CANCELED и т.д.)
+            - Возвращает результаты в хронологическом порядке
+
+        Возвращает:
+            list: список кортежей с датами запросов в формате [(datetime.date,), ...]
+
+        Особенности:
+            - Используется для проверки доступных дат при создании новых запросов
+            - Фильтрует выходные дни на уровне приложения, а не в БД
+            - Асинхронная функция, требует await при вызове
+            - Не учитывает статус запроса - возвращает все даты независимо от статуса
+    """
+    cur.execute(f'''
+                SELECT request_date FROM {DB_SCHEMA}.parking_requests 
+                WHERE user_id = %s 
+                    AND request_date >= %s
+                ''', (user_id, from_date,))
+    return cur.fetchall()
+
+async def get_request_status_by_id(cur, request_id):
+    cur.execute(f'''
+                SELECT pr.status FROM {DB_SCHEMA}.parking_requests pr
+                WHERE pr.id = %s 
+                ''', (request_id,))
+
+    result = cur.fetchone()
+    return result[0] if result else None

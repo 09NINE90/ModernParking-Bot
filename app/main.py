@@ -12,7 +12,7 @@ async def main():
     init_database()
 
     logging.basicConfig(
-        level=logging.WARN,
+        level=logging.DEBUG,
         format='%(asctime)s - %(filename)s - %(funcName)s - %(lineno)d - %(name)s - %(levelname)s - %(message)s'
     )
 

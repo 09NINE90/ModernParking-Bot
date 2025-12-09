@@ -26,7 +26,7 @@ async def send_feedback(message: types.Message, state: FSMContext):
             "unknown": "❓ Неизвестно"
         }.get(feedback_type, "❓ Неизвестно")
 
-        user_info = await get_user_full_mention(user_id)
+        user_info = await get_user_full_mention(user_id=user_id, is_link=True)
 
         message_text = (
             f"{type_display}\n\n"

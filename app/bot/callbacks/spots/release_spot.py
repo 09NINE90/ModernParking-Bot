@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date, datetime, timedelta
 
 import psycopg2
 from aiogram import types
@@ -11,9 +11,11 @@ from app.bot.notification.log_notification import send_log_notification
 from app.bot.service.distribution_service import distribute_parking_spots
 from app.bot.keyboard_markup import return_markup, back_markup, date_list_markup
 from app.bot.service.user_service import get_db_user_id
+from app.bot.users.get_user_full_mention import get_user_full_mention
 from app.data.init_db import get_db_connection
 from app.bot.parking_states import ParkingStates
-from app.data.repository.parking_releases_repository import insert_spot_on_date, get_user_id_took_by_date_and_spot
+from app.data.repository.parking_releases_repository import insert_spot_on_date, get_user_id_took_by_date_and_spot, \
+    get_user_releases_dates
 from app.data.repository.parking_spots_repository import get_spot_by_id
 from app.log_text import SPOT_CHECK_ERROR, SPOT_RELEASE_SAVE_ERROR, DB_USER_ID_GET_ERROR, DATABASE_ERROR
 
@@ -99,10 +101,56 @@ async def show_release_calendar_message(message: types.Message, state: FSMContex
             message: объект сообщения от Telegram
             state: FSMContext для управления состоянием диалога
     """
-    await message.answer(
-        "Выберите дату, когда освободите свое место:",
-        reply_markup=date_list_markup(callback_name='release_date')
-    )
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                tg_user_id = message.from_user.id
+                db_user_id = await get_db_user_id(cur, tg_user_id)
+                today = datetime.today().date()
+
+                data = await state.get_data()
+                spot_number = data.get('selected_spot')
+
+                if not db_user_id:
+                    logging.error(DB_USER_ID_GET_ERROR.format(tg_user_id))
+                    await send_log_notification(LogNotification.ERROR, DB_USER_ID_GET_ERROR.format(tg_user_id))
+                    return None
+
+                existing_dates_result = await get_user_releases_dates(cur, db_user_id, spot_number, today)
+                if not existing_dates_result:
+                    existing_dates = []
+                else:
+                    existing_dates = [date_tuple[0] for date_tuple in existing_dates_result]
+
+                if not is_has_available_dates(existing_dates, today):
+                    await message.answer(
+                        f"На ближайшие 7 дней вы освободили место <b>№{spot_number}</b> на все доступные даты.\n\n"
+                        "<i>Попробуйте отправить запрос позже, когда будут доступны новые даты.</i>",
+                        reply_markup=back_markup
+                    )
+                else:
+                    await message.answer(
+                        "Выберите дату, когда освободите свое место:\n\n"
+                        f"ℹ️ <i>Отображаются только те даты, на которые место <b>№{spot_number}</b> не было освобождено.</i>",
+                        reply_markup=date_list_markup(existing_dates=existing_dates, callback_name='release_date')
+                    )
+
+    except psycopg2.Error as e:
+        logging.error(DATABASE_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, DATABASE_ERROR.format(e))
+
+
+def is_has_available_dates(existing_dates, today):
+    available_dates = []
+    for i in range(7):
+        current_date = today + timedelta(days=i)
+        if current_date.weekday() == 5 or current_date.weekday() == 6:
+            continue
+        if current_date in existing_dates:
+            continue
+        available_dates.append(current_date)
+
+    return available_dates
 
 
 async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMContext):
@@ -147,6 +195,10 @@ async def process_spot_release(query: CallbackQuery, date_str: str, state: FSMCo
                         f"✅ Отлично! Вы освободили место №{spot_num} на {release_date.strftime('%d.%m.%Y')}",
                         reply_markup=return_markup
                     )
+                    user_name = await get_user_full_mention(tg_user_id, True)
+                    await send_log_notification(LogNotification.INFO,
+                                                f"Пользователь {user_name} успешно освободил место №{spot_number}")
+
                     await distribute_parking_spots()
                 else:
                     await query.message.edit_text(

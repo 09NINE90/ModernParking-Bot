@@ -2,7 +2,7 @@ from datetime import date
 
 from app.data.models.releases.releases_enum import ParkingReleaseStatus
 from app.data.models.releases.revoke_releases_dto import RevokeRelease
-from app.data.repository.parking_releases_repository import update_revoke_parking_release, \
+from app.data.repository.parking_releases_repository import update_parking_release_set_free, \
     find_user_releases_for_revoke, find_release_for_confirm_revoke
 
 
@@ -30,4 +30,4 @@ async def get_release_for_confirm_revoke(cur, release_id, db_user_id):
     )
 
 async def revoke_parking_release(cur, release_id, status):
-    await update_revoke_parking_release(cur, release_id, status)
+    await update_parking_release_set_free(cur, release_id, status)

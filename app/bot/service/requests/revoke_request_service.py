@@ -132,7 +132,7 @@ async def confirm_revoke_request(query: CallbackQuery, state: FSMContext, reques
                                     f"на дату <u>{request.request_date.strftime('%d.%m.%Y')}</u>\n\n"
                                     f"ℹ️ <i>Это место будет предложено кому-нибудь другому</i>")
 
-
+                conn.commit()
                 await distribute_parking_spots()
 
 

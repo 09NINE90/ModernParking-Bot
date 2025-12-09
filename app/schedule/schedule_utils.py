@@ -61,3 +61,24 @@ async def cancel_scheduled_cancellation_by_reminder(reminder_data: ParkingRemind
         logging.error(SCHEDULED_JOB_CANCEL_ERROR.format(e))
         await send_log_notification(LogNotification.ERROR, SCHEDULED_JOB_CANCEL_ERROR.format(e))
         return False
+
+
+async def cancel_schedule_distribute_weekly_parking_schedules(tg_id):
+    """
+        Отменяет запланированную автоматическую отмену места
+    """
+    try:
+        scheduler = get_scheduler()
+        job_id = f"auto_cancel_distribute_weekly_parking_{tg_id}"
+
+        job = scheduler.get_job(job_id)
+        if job:
+            scheduler.remove_job(job_id)
+            logging.debug(f"Cancelled scheduled job: {job_id}")
+            return True
+        return False
+
+    except Exception as e:
+        logging.error(SCHEDULED_JOB_CANCEL_ERROR.format(e))
+        await send_log_notification(LogNotification.ERROR, SCHEDULED_JOB_CANCEL_ERROR.format(e))
+        return False

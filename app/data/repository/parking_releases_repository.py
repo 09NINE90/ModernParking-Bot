@@ -1,3 +1,5 @@
+import logging
+
 from app.data.db_config import DB_SCHEMA
 from app.data.models.releases.releases_enum import ParkingReleaseStatus
 
@@ -183,7 +185,7 @@ async def free_parking_releases_by_date(cur, date):
     return cur.fetchall()
 
 
-async def parking_releases_by_week(cur, status, monday_date, friday_date):
+async def parking_releases_between_two_dates(cur, status, first_day, last_day):
     """
     Асинхронно получает записи о возврате парковочных мест за указанную неделю по заданному статусу.
 
@@ -193,8 +195,8 @@ async def parking_releases_by_week(cur, status, monday_date, friday_date):
     Параметры:
         cur: курсор базы данных для выполнения SQL-запросов
         status: статус записей о возврате для фильтрации (например, 'ACCEPTED', 'NOT_FOUND')
-        monday_date: дата понедельника (начало периода, включительно)
-        friday_date: дата пятницы (конец периода, включительно)
+        first_day: дата понедельника (начало периода, включительно)
+        last_day: дата пятницы (конец периода, включительно)
 
     Возвращает:
         list: список кортежей со всеми полями записей о возвратах, удовлетворяющих условиям
@@ -211,9 +213,37 @@ async def parking_releases_by_week(cur, status, monday_date, friday_date):
                 WHERE pr.status = %s
                   AND pr.release_date >= %s
                   AND pr.release_date <= %s
-                ''', (status, monday_date, friday_date))
+                ''', (status, first_day, last_day))
 
     return cur.fetchall()
+
+
+async def get_parking_releases_statistics_for_period(cur, start_date, end_date):
+    """
+    Получает статистику по возвратам парковочных мест за указанный период
+    """
+    cur.execute(f'''
+        SELECT 
+            COUNT(*) as total,
+            COUNT(*) FILTER (WHERE status = 'ACCEPTED') as accepted,
+            COUNT(*) FILTER (WHERE status = 'PENDING') as pending,
+            COUNT(*) FILTER (WHERE status = 'CANCELED') as canceled,
+            COUNT(*) FILTER (WHERE status = 'NOT_FOUND') as not_found,
+            COUNT(*) FILTER (WHERE status = 'WAITING') as waiting
+        FROM {DB_SCHEMA}.parking_releases 
+        WHERE release_date BETWEEN %s AND %s
+    ''', (start_date, end_date))
+
+    stats = cur.fetchone()
+
+    return {
+        'total': stats[0],
+        'accepted': stats[1],
+        'pending': stats[2],
+        'canceled': stats[3],
+        'not_found': stats[4],
+        'waiting': stats[5]
+    }
 
 
 async def current_spots_releases_by_user(cur, user_id, release_date):
@@ -289,7 +319,7 @@ async def get_tomorrow_accepted_spot(cur, date):
     return cur.fetchall()
 
 
-async def update_revoke_parking_release(cur, release_id, current_status: ParkingReleaseStatus):
+async def update_parking_release_set_free(cur, release_id, current_status: ParkingReleaseStatus):
     """
         Асинхронно обновляет запрос на освобождение места при отзыве.
 
@@ -503,3 +533,61 @@ async def get_free_spots(cur, distribution_date):
                 ORDER BY created_at ASC
                 ''', (distribution_date,))
     return cur.fetchall()
+
+async def get_user_releases_dates(cur, user_id, spot_number, from_date):
+    """
+        Получает список дат, на которые пользователь уже создал запросы на освобождение парковочного места.
+
+        Возвращает все даты освобождения начиная с указанной, для конкретного пользователя
+        и парковочного места.
+
+        Параметры:
+            cur: курсор базы данных для выполнения SQL-запросов
+            user_id: UUID пользователя в таблице users
+            spot_number: номер парковочного места (spot_id)
+            from_date: начальная дата для поиска (включительно)
+
+        Логика:
+            - Выбирает все даты освобождения для указанного пользователя и места
+            - Фильтрует записи начиная с указанной даты
+            - Возвращает результаты в хронологическом порядке
+
+        Возвращает:
+            list: список кортежей с датами освобождения в формате [(datetime.date,), ...]
+
+        Особенности:
+            - Используется для проверки доступных дат при создании новых запросов на освобождение
+            - Помогает избежать дублирования запросов на освобождение одного места
+            - Асинхронная функция, требует await при вызове
+            - Работает с таблицей parking_releases
+    """
+    cur.execute(f'''
+                SELECT release_date FROM {DB_SCHEMA}.parking_releases 
+                WHERE user_id = %s 
+                    AND spot_id = %s
+                    AND release_date >= %s
+                ''', (user_id, spot_number, from_date,))
+    return cur.fetchall()
+
+async def is_spot_still_available(cur, release_id) -> bool:
+    """Проверяет, что место все еще доступно для распределения"""
+    try:
+        cur.execute(f"""
+            SELECT status FROM {DB_SCHEMA}.parking_releases 
+            WHERE id = %s 
+                AND status = 'PENDING'
+        """, (release_id,))
+        return cur.fetchone() is not None
+    except Exception as e:
+        logging.error(f"Error checking spot availability: {e}")
+        return False
+
+
+async def get_release_status_by_id(cur, release_id):
+    cur.execute(f'''
+                SELECT pr.status FROM {DB_SCHEMA}.parking_releases pr
+                WHERE pr.id = %s 
+                ''', (release_id,))
+
+    result = cur.fetchone()
+    return result[0] if result else None

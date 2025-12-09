@@ -4,7 +4,7 @@ from app.bot.config import bot
 from app.log_text import USER_MENTION_ERROR
 
 
-async def get_user_full_mention(user_id: int) -> str:
+async def get_user_full_mention(user_id: int, is_link: bool = False) -> str:
     """
     Возвращает полное обращение с упоминанием (для кликабельных ссылок)
     """
@@ -20,13 +20,22 @@ async def get_user_full_mention(user_id: int) -> str:
             else:
                 display_name = user.last_name
 
-        if display_name:
-            return f"<a href='tg://user?id={user_id}'>{display_name}</a>"
+        if is_link:
+            if display_name:
+                return f"<a href='tg://user?id={user_id}'>{display_name}</a>"
 
-        if user.username:
-            return f"<a href='tg://user?id={user_id}'>@{user.username}</a>"
+            if user.username:
+                return f"<a href='tg://user?id={user_id}'>@{user.username}</a>"
 
-        return f"<a href='tg://user?id={user_id}'>пользователь #{user_id}</a>"
+            return f"<a href='tg://user?id={user_id}'>пользователь #{user_id}</a>"
+        else:
+            if display_name:
+                return display_name
+
+            if user.username:
+                return user.username
+
+            return str(user_id)
 
     except Exception as e:
         logging.error(USER_MENTION_ERROR.format(user_id, e))
