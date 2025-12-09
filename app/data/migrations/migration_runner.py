@@ -1,19 +1,49 @@
 import os
 import glob
 import re
-
-from app.data.db_config import DB_SCHEMA
-from app.data.migrations import (
-    get_connection,
-    create_migrations_table,
-    get_applied_migrations,
-    mark_migration_applied
-)
+import psycopg2
+from app.config import settings
+from app.data.database import get_db_config  # Импортируем безопасно
 
 
 class SQLMigrationRunner:
     def __init__(self):
         self.migrations_path = os.path.join(os.path.dirname(__file__), 'versions')
+        self.db_config = get_db_config()  # Получаем конфиг один раз
+
+    def get_connection(self):
+        """Создает соединение с БД"""
+        return psycopg2.connect(**self.db_config)
+
+    def create_migrations_table(self, conn):
+        """Создает таблицу миграций"""
+        with conn.cursor() as cur:
+            cur.execute(f"CREATE SCHEMA IF NOT EXISTS {settings.DB_SCHEMA}")
+            cur.execute(f"""
+                CREATE TABLE IF NOT EXISTS {settings.DB_SCHEMA}.database_migrations
+                (
+                    id         SERIAL PRIMARY KEY,
+                    version    INTEGER UNIQUE NOT NULL,
+                    name       VARCHAR(255)   NOT NULL,
+                    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conn.commit()
+
+    def get_applied_migrations(self, conn):
+        """Получает список примененных миграций"""
+        with conn.cursor() as cur:
+            cur.execute(f"SELECT version FROM {settings.DB_SCHEMA}.database_migrations ORDER BY version")
+            return {row[0] for row in cur.fetchall()}
+
+    def mark_migration_applied(self, conn, version: int, name: str):
+        """Отмечает миграцию как примененную"""
+        with conn.cursor() as cur:
+            cur.execute(
+                f"INSERT INTO {settings.DB_SCHEMA}.database_migrations (version, name) VALUES (%s, %s)",
+                (version, name)
+            )
+            conn.commit()
 
     def get_migration_files(self):
         """Возвращает отсортированный список файлов миграций"""
@@ -43,41 +73,47 @@ class SQLMigrationRunner:
 
     def run_migrations(self):
         """Запускает все непримененные миграции"""
-        create_migrations_table()
-        applied_migrations = get_applied_migrations()
-        migrations = self.get_migration_files()
-
+        conn = self.get_connection()
         try:
-            with get_connection() as conn:
-                with conn.cursor() as cur:
-                    for migration in migrations:
-                        if migration['version'] not in applied_migrations:
-                            print(f"Applying migration: {migration['name']}")
+            self.create_migrations_table(conn)
+            applied_migrations = self.get_applied_migrations(conn)
+            migrations = self.get_migration_files()
 
-                            sql = self.read_sql_file(migration['up_file'])
-                            sql = sql.replace("DEFAULT_SCHEMA", DB_SCHEMA)
-                            print(f"sql = {sql}")
-                            cur.execute(sql)
+            with conn.cursor() as cur:
+                for migration in migrations:
+                    if migration['version'] not in applied_migrations:
+                        print(f"Applying migration: {migration['name']}")
 
-                            mark_migration_applied(migration['version'], migration['name'])
-                            print(f"Migration {migration['name']} applied successfully")
+                        sql = self.read_sql_file(migration['up_file'])
+                        sql = sql.replace("DEFAULT_SCHEMA", settings.DB_SCHEMA)
+                        print(f"sql = {sql}")
+                        cur.execute(sql)
 
-                    print("All migrations applied successfully")
-                    print(self.status())
+                        self.mark_migration_applied(conn, migration['version'], migration['name'])
+                        print(f"Migration {migration['name']} applied successfully")
+
+                print("All migrations applied successfully")
+                print(self.status())
 
         except Exception as e:
             conn.rollback()
             print(f"Migration failed: {e}")
             raise
+        finally:
+            conn.close()
 
     def status(self):
         """Показывает статус миграций"""
-        applied_migrations = get_applied_migrations()
-        all_migrations = self.get_migration_files()
+        conn = self.get_connection()
+        try:
+            applied_migrations = self.get_applied_migrations(conn)
+            all_migrations = self.get_migration_files()
 
-        print("Migration Status:")
-        print("=================")
+            print("Migration Status:")
+            print("=================")
 
-        for migration in all_migrations:
-            status = "APPLIED" if migration['version'] in applied_migrations else "PENDING"
-            print(f"{migration['version']:04d} | {migration['name']:30} | {status}")
+            for migration in all_migrations:
+                status = "APPLIED" if migration['version'] in applied_migrations else "PENDING"
+                print(f"{migration['version']:04d} | {migration['name']:30} | {status}")
+        finally:
+            conn.close()

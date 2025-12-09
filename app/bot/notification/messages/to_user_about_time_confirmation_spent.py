@@ -1,5 +1,5 @@
-from app.data.models.spot_confirmation.spot_confirmation_dto import SpotConfirmationDTO
-from app.bot.users.get_user_full_mention import get_user_full_mention
+from app.bot.utils import get_user_full_mention
+from app.data.models import SpotConfirmationDTO
 
 
 async def to_user_about_time_confirmation_spent(spot_confirmation_data: SpotConfirmationDTO):

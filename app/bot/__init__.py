@@ -1,8 +1,10 @@
-from aiogram import Dispatcher, Router
-from aiogram.fsm.storage.memory import MemoryStorage
-from app.bot.handlers import register_handlers
+from .bot import bot, dp
+from .parking_states import  ParkingStates
+from .dispatcher import setup_dispatcher
 
-dp = Dispatcher(storage=MemoryStorage())
-router = Router()
-dp.include_router(router)
-register_handlers(router)
+__all__ = [
+    'bot',
+    'dp',
+    'setup_dispatcher',
+    'ParkingStates'
+]
