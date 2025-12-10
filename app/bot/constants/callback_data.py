@@ -36,3 +36,7 @@ class CallbackData:
     CONFIRM_REVOKE_RELEASE_PREFIX = "confirm_revoke_release_"
     CONFIRMATION_REVOKE_REQUEST_PREFIX = "confirmation_revoke_request_"
     CONFIRM_REVOKE_REQUEST_PREFIX = "confirm_revoke_request_"
+
+    # Админ
+    MAIN_ADMIN = "main_admin"
+    ALL_STATISTICS = "all_statistics"

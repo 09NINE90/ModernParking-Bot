@@ -9,7 +9,8 @@ from .inline import (
     create_delete_schedules_keyboard,
     confirmation_delete_schedule_markup,
     schedule_selection_markup,
-    date_list_markup
+    date_list_markup,
+    main_admin_markup
 )
 
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     'create_delete_schedules_keyboard',
     'confirmation_delete_schedule_markup',
     'schedule_selection_markup',
-    'date_list_markup'
+    'date_list_markup',
+    'main_admin_markup'
 ]
