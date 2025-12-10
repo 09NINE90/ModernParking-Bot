@@ -197,22 +197,26 @@ class SpotRequestRepository:
         try:
             with self._get_cursor() as cur:
                 cur.execute(f'''
-                                  SELECT 
-                                      pr.status, 
-                                      pr.request_date,
-                                      CASE 
-                                          WHEN pr.status = 'ACCEPTED' THEN prel.spot_id
-                                          ELSE NULL
-                                      END as spot_id
-                                  FROM {settings.DB_SCHEMA}.parking_requests pr
-                                  LEFT JOIN {settings.DB_SCHEMA}.parking_releases prel 
-                                      ON pr.user_id = prel.user_id_took
-                                      AND pr.status = 'ACCEPTED'
-                                  WHERE pr.user_id = %s
+                                SELECT 
+                                    pr.status, 
+                                    pr.request_date,
+                                    CASE 
+                                        WHEN pr.status = 'ACCEPTED' THEN (
+                                            SELECT spot_id 
+                                            FROM {settings.DB_SCHEMA}.parking_releases prel 
+                                            WHERE prel.user_id_took = pr.user_id 
+                                                AND prel.release_date = pr.request_date
+                                                AND prel.status = 'ACCEPTED'
+                                            LIMIT 1
+                                        )
+                                        ELSE NULL
+                                    END as spot_id
+                                FROM {settings.DB_SCHEMA}.parking_requests pr
+                                WHERE pr.user_id = %s
                                     AND pr.request_date >= %s
                                     AND (pr.status = 'ACCEPTED' OR pr.status = 'PENDING')
-                                  ORDER BY request_date DESC
-                                  ''', (user_id, rq_date,))
+                                ORDER BY request_date DESC
+                            ''', (user_id, rq_date,))
 
                 return cur.fetchall()
         except Exception as e:

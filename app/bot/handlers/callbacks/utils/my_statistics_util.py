@@ -30,11 +30,11 @@ async def get_my_statistics(callback: CallbackQuery):
 
         current_spots_requests = spot_request_service.get_current_spots_request_by_user(
             user_id=db_user_id,
-            rq_date=today
+            rq_date=today.date()
         )
         current_spots_releases = spot_release_service.get_current_spots_releases_by_user(
             user_id=db_user_id,
-            rq_date=today
+            rq_date=today.date()
         )
 
         message_text = get_start_message_text(request_statistics, release_statistics)
