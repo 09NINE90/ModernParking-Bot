@@ -38,6 +38,8 @@ async def take_spot_by_reminder(callback: CallbackQuery):
             reply_markup=back_to_main_markup
         )
 
+        return None
+
 
 async def cancel_spot_by_reminder(callback: CallbackQuery):
     """Обрабатывает отмену занятия места"""
