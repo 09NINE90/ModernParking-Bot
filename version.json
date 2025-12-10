@@ -1,5 +1,5 @@
 {
-    "current_version": "1.2.0",
+    "current_version": "2.0",
     "versions": [
         {
             "version": "1.0",
@@ -27,7 +27,15 @@
                 "Исправлены мелкие ошибки"
             ],
             "release_date": "2025-11-20",
-            "notified": false
+            "notified": true
+        },
+        {
+              "version": "2.0",
+              "changes": [
+                  "Рефакторинг архитектуры приложения"
+              ],
+              "release_date": "2025-12-10",
+              "notified": true
         }
     ]
 }
