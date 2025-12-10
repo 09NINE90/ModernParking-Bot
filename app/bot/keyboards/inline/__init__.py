@@ -26,6 +26,10 @@ from .dates import (
     confirmation_revoke_requests_markup,
 )
 
+from .admin import (
+    main_admin_markup
+)
+
 __all__ = [
     # Base
     'back_to_main_markup',
@@ -50,5 +54,8 @@ __all__ = [
     'revoke_releases_markup',
     'revoke_requests_markup',
     'confirmation_revoke_requests_markup',
-    'confirmation_revoke_release_markup'
+    'confirmation_revoke_release_markup',
+
+    # Admin
+    'main_admin_markup'
 ]
