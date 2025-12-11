@@ -1,6 +1,6 @@
 from aiogram.types import CallbackQuery
 
-from app.bot.keyboards.inline.admin import back_to_main_admin
+from app.bot.keyboards import back_to_main_admin
 from app.data import get_db_connection
 from app.services import ServiceFactory
 

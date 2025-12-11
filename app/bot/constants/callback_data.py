@@ -40,3 +40,5 @@ class CallbackData:
     # Админ
     MAIN_ADMIN = "main_admin"
     ALL_STATISTICS = "all_statistics"
+    CLEAR_TABLES = "clear_tables"
+    YES_CLEAR_TABLES = "yes_clear_tables"
