@@ -269,6 +269,45 @@ class SpotReleaseRepository:
             )
             return False
 
+    def update_release_status(self, release_id, current_status: ParkingReleaseStatus):
+        """
+            Обновляет статус релиза места
+        """
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(f'''
+                                UPDATE {settings.DB_SCHEMA}.parking_releases
+                                SET status       = %s
+                                WHERE id = %s
+                                RETURNING id
+                                ''', (current_status.name, release_id))
+
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка обновления статуса релиза места: {e}"
+            )
+            return False
+
+    def accept_spot_if_free(self, release_id, user_id) -> bool:
+        """
+            Пытается занять место только если оно ещё в статусе WAITING и без user_id.
+            Возвращает True, если удалось (пользователь успел первым).
+        """
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(f"""
+                    UPDATE {settings.DB_SCHEMA}.parking_releases
+                    SET status = 'ACCEPTED', user_id_took = %s
+                    WHERE id = %s
+                      AND status = 'WAITING'
+                    RETURNING id
+                """, (user_id, release_id))
+                row = cur.fetchone()
+                return bool(row)
+        except Exception as e:
+            log_sync(log_message=f"Ошибка при попытке занять место: {e}")
+            return False
+
     def get_release_owner(self, release_id):
         """
             Получает информацию о пользователе, который освободил парковочное место.
@@ -443,6 +482,11 @@ class SpotReleaseRepository:
             )
 
     def update_releases_statuses_to_not_found_by_date(self, rq_date: date):
+        """
+            Переводит все релизы в статус NOT_FOUND, если:
+            - их текущий статус PENDING,
+            - их дата меньше указанной даты (просроченные релизы).
+        """
         try:
             with self._get_cursor() as cur:
                 cur.execute(f'''
@@ -456,3 +500,37 @@ class SpotReleaseRepository:
             log_sync(
                 log_message=f"Ошибка обновления статусов релизов: {e}"
             )
+
+    def mark_releases_not_found_if_only_cancelled(self, confirmations):
+        """
+            Переводит релизы в NOT_FOUND, если они связаны с подтверждениями,
+            которые мы сейчас отменяем, и при этом сами релизы ещё в статусах
+            PENDING или WAITING.
+            confirmations: iterable[(conf_id, user_id, request_id, release_id, message_id, tg_id)]
+        """
+        release_ids = {c[3] for c in confirmations}  # уникальные release_id
+        if not release_ids:
+            return None
+
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(
+                    f"""
+                        UPDATE {settings.DB_SCHEMA}.parking_releases prl
+                        SET status = 'NOT_FOUND'
+                        WHERE prl.id = ANY(%s::uuid[])
+                          AND prl.status IN ('PENDING', 'WAITING')
+                          AND NOT EXISTS (
+                              SELECT 1
+                              FROM {settings.DB_SCHEMA}.spot_confirmations sc
+                              WHERE sc.release_id = prl.id
+                                AND sc.status = 'WAITING'
+                          )
+                        """,
+                    (list(release_ids),),
+                )
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка массового обновления релизов в NOT_FOUND: {e}"
+            )
+            return None

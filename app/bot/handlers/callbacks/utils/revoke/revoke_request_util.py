@@ -79,6 +79,7 @@ async def confirmation_revoke_request(callback: CallbackQuery, request_id):
 
 async def confirm_revoke_request(callback: CallbackQuery, request_id):
     tg_user_id = callback.from_user.id
+    user_name = await get_user_full_mention(tg_user_id, False)
 
     with get_db_connection() as conn:
         user_service = ServiceFactory.create_user_service(conn)
@@ -110,13 +111,13 @@ async def confirm_revoke_request(callback: CallbackQuery, request_id):
             )
             user_service.update_user_rating_by_user_id(
                 db_user_id=db_user_id,
-                delta=-1
+                delta=-1,
+                user_name=user_name
             )
             message_text = (f"Вы успешно отказались от парковочного места <b>№{request.spot_id}</b> "
                             f"на дату <u>{request.request_date.strftime('%d.%m.%Y')}</u>\n\n"
                             f"ℹ️ <i>Это место будет предложено кому-нибудь другому</i>")
 
-            user_name = await get_user_full_mention(tg_user_id, False)
             await log(
                 log_type=LogType.INFO,
                 log_message=f"{user_name} отказался от парковочного места №{request.spot_id} "

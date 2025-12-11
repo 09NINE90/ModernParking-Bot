@@ -6,12 +6,14 @@ from typing import Optional
 @dataclass
 class SpotConfirmationDTO:
     """DTO для передачи данных о подтверждении парковочного места"""
+    confirmation_id: str = None
     db_user_id: str = None
     tg_user_id: int = None
     spot_number: int = None
     assignment_date: date = None
     release_id: Optional[str] = None
     request_id: Optional[str] = None
+    message_sent_id: int = None
 
     def __post_init__(self):
         """Валидация данных после инициализации"""

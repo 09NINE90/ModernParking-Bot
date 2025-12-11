@@ -1,6 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from app.utils.check_confirmation_status_util import expire_waiting_confirmations
 from app.utils.daily_statistics_util import get_daily_statistics
 from app.utils.distribute_weekly_schedules_util import distribute_weekly_schedules
 from app.utils.spot_reminder_util import spot_reminder
@@ -54,6 +55,16 @@ def setup_scheduler() -> AsyncIOScheduler:
             minute=00
         ),
         id='daily_user_reminder'
+    )
+
+    # Ежедневно в 18:00
+    scheduler.add_job(
+        expire_waiting_confirmations,
+        trigger=CronTrigger(
+            hour=18,
+            minute=00
+        ),
+        id='daily_check_confirmation_status'
     )
 
     # Ежедневно в 00:05

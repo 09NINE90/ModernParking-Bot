@@ -21,8 +21,26 @@ class SpotConfirmationService:
     def deactivate_spot_confirmations_by_user(self, user_id):
         return self.repository.deactivate_spot_confirmations_by_user(user_id)
 
+    def deactivate_spot_confirmations_by_release(self, release_id):
+        return self.repository.deactivate_spot_confirmations_by_release(release_id)
+
     def set_message_sent_id(self, spot_confirmation_id, message_sent_id):
         return self.repository.set_message_sent_id(spot_confirmation_id, message_sent_id)
 
     def get_message_sent_id(self, user_id, release_id, request_id):
         return self.repository.get_message_sent_id(user_id, release_id, request_id)
+
+    def set_status(self, spot_confirmation_id, status):
+        return self.repository.set_status(spot_confirmation_id, status)
+
+    def get_waiting_confirmations_by_release_except_user(self, release_id, user_id):
+        return self.repository.get_waiting_confirmations_by_release_except_user(release_id, user_id)
+
+    def has_waiting_confirmations_for_release(self, release_id):
+        return self.repository.has_waiting_confirmations_for_release(release_id)
+
+    def get_all_waiting_confirmations_with_user(self):
+        return self.repository.get_all_waiting_confirmations_with_user()
+
+    def bulk_cancel_all_waiting(self):
+        return self.repository.bulk_cancel_all_waiting()

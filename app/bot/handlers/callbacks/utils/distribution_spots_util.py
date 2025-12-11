@@ -1,3 +1,4 @@
+import asyncio
 import random
 from datetime import datetime
 
@@ -20,7 +21,7 @@ async def distribute_parking_spots():
     )
     today_date = datetime.today().date()
     datetime_now = datetime.now()
-    today_9am = datetime_now.replace(hour=9, minute=0, second=0, microsecond=0)
+    today_8_30am = datetime_now.replace(hour=8, minute=30, second=0, microsecond=0)
     try:
         with get_db_connection() as conn:
             distributed_count = 0
@@ -51,6 +52,69 @@ async def distribute_parking_spots():
                                     f"{distribution_date.strftime('%d.%m.%Y')}",
                         is_sending_log=False
                     )
+                    continue
+
+                if (distribution_date == today_date) and (datetime_now > today_8_30am):
+
+                    all_candidates = spot_request_service.get_all_spot_candidates(distribution_date)
+                    if not all_candidates:
+                        await log(
+                            log_type=LogType.DEBUG,
+                            log_message="Не найдены кандидаты на место на дату "
+                                        f"{distribution_date.strftime('%d.%m.%Y')} (после 8:30)",
+                            is_sending_log=False
+                        )
+                        continue
+
+                    # Для каждого свободного места создаем spot_confirmation для ВСЕХ кандидатов
+                    for release_id, spot_id in free_spots:
+                        if not spot_release_service.is_spot_still_available(release_id):
+                            continue
+
+                        # Обновляем статус места на WAITING
+                        spot_release_service.update_release_status(
+                            release_id=release_id,
+                            current_status=ParkingReleaseStatus.WAITING
+                        )
+
+                        notification_tasks = []
+                        confirmations_ids = []
+
+                        # Создаем подтверждения для всех кандидатов
+                        for request_id, user_id, rating, tg_id in all_candidates:
+                            spot_request_service.update_parking_request_status(
+                                request_id=request_id,
+                                current_status=ParkingRequestStatus.WAITING_CONFIRMATION
+                            )
+                            spot_confirmation_data = SpotConfirmationDTO(
+                                db_user_id=str(user_id),
+                                tg_user_id=tg_id,
+                                spot_number=spot_id,
+                                assignment_date=distribution_date,
+                                release_id=release_id,
+                                request_id=request_id
+                            )
+
+                            spot_confirmation_id = spot_confirmation_service.create_spot_confirmation(
+                                spot_confirmation_data=spot_confirmation_data
+                            )
+                            confirmations_ids.append(spot_confirmation_id)
+
+                            message_text = await to_user_about_found_spot(spot_confirmation_data)
+                            notification_tasks.append(
+                                notify_user(tg_id, message_text, NotificationTypes.SPOT_FOUND)
+                            )
+
+                        if notification_tasks:
+                            results = await asyncio.gather(*notification_tasks, return_exceptions=True)
+                            for conf_id, result in zip(confirmations_ids, results):
+                                if isinstance(result, Exception):
+                                    continue
+                                message_id = result
+                                spot_confirmation_service.set_message_sent_id(conf_id, message_id)
+
+                        waiting_count += len(all_candidates)
+
                     continue
 
                 candidates = spot_request_service.get_spot_candidates(distribution_date, len(free_spots))
@@ -85,84 +149,46 @@ async def distribute_parking_spots():
                         )
                         continue
 
-                    if (distribution_date == today_date) and (datetime_now > today_9am):
-                        spot_release_service.update_parking_releases(
-                            user_id=user_id,
-                            release_id=release_id,
-                            current_status=ParkingReleaseStatus.WAITING
+                    release_owner = spot_release_service.get_release_owner(release_id)
+
+                    if release_owner:
+                        release_user_id, release_tg_id = release_owner
+                        release_notifications.append({
+                            'tg_id': release_tg_id,
+                            'spot_number': spot_id,
+                            'date': distribution_date
+                        })
+
+                    spot_release_service.update_parking_releases(
+                        user_id=user_id,
+                        release_id=release_id,
+                        current_status=ParkingReleaseStatus.ACCEPTED
+                    )
+                    spot_request_service.update_parking_request_status(
+                        request_id=request_id,
+                        current_status=ParkingRequestStatus.ACCEPTED
+                    )
+                    user_service.update_user_rating_by_user_id(
+                        db_user_id=user_id,
+                        delta=1,
+                        user_name=user_name
+                    )
+
+                    message_text = await to_user_about_assigned_spot(tg_id, spot_id, distribution_date)
+                    await notify_user(tg_id, message_text)
+
+                    request_status = spot_request_service.get_request_status_by_id(request_id)
+                    release_status = spot_release_service.get_release_status_by_id(release_id)
+
+                    await log(
+                        log_type=LogType.INFO,
+                        log_message=(
+                            f"Пользователю {user_name} отдано место №{spot_id}\n"
+                            f"release_status = {release_status}\n"
+                            f"request_status = {request_status}"
                         )
-                        spot_request_service.update_parking_request_status(
-                            request_id=request_id,
-                            current_status=ParkingRequestStatus.WAITING_CONFIRMATION
-                        )
-
-                        spot_confirmation_data = SpotConfirmationDTO(
-                            db_user_id=str(user_id),
-                            tg_user_id=tg_id,
-                            spot_number=spot_id,
-                            assignment_date=distribution_date,
-                            release_id=release_id,
-                            request_id=request_id
-                        )
-
-                        spot_confirmation_id = spot_confirmation_service.create_spot_confirmation(
-                            spot_confirmation_data)
-
-                        message_text = await to_user_about_found_spot(spot_confirmation_data)
-                        message_id = await notify_user(tg_id, message_text, NotificationTypes.SPOT_FOUND)
-
-                        spot_confirmation_service.set_message_sent_id(spot_confirmation_id, message_id)
-
-                        request_status = spot_request_service.get_request_status_by_id(request_id)
-                        release_status = spot_release_service.get_release_status_by_id(release_id)
-
-                        await log(
-                            log_type=LogType.INFO,
-                            log_message=(
-                                f"Пользователю {user_name} предложено место №{spot_id}\n"
-                                f"release_status = {release_status}\n"
-                                f"request_status = {request_status}"
-                            )
-                        )
-                        waiting_count += 1
-
-                    else:
-                        release_owner = spot_release_service.get_release_owner(release_id)
-
-                        if release_owner:
-                            release_user_id, release_tg_id = release_owner
-                            release_notifications.append({
-                                'tg_id': release_tg_id,
-                                'spot_number': spot_id,
-                                'date': distribution_date
-                            })
-
-                        spot_release_service.update_parking_releases(
-                            user_id=user_id,
-                            release_id=release_id,
-                            current_status=ParkingReleaseStatus.ACCEPTED
-                        )
-                        spot_request_service.update_parking_request_status(
-                            request_id=request_id,
-                            current_status=ParkingRequestStatus.ACCEPTED
-                        )
-                        user_service.update_user_rating_by_user_id(user_id, 1)
-
-                        message_text = await to_user_about_assigned_spot(tg_id, spot_id, distribution_date)
-                        await notify_user(tg_id, message_text)
-
-                        request_status = spot_request_service.get_request_status_by_id(request_id)
-                        release_status = spot_release_service.get_release_status_by_id(release_id)
-
-                        await log(
-                            log_type=LogType.INFO,
-                            log_message=(
-                                f"Пользователю {user_name} отдано место №{spot_id}\n"
-                                f"release_status = {release_status}\n"
-                                f"request_status = {request_status}"
-                            )
-                        )
-                        distributed_count += 1
+                    )
+                    distributed_count += 1
 
             conn.commit()
 

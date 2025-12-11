@@ -62,6 +62,12 @@ class SpotReleaseService:
     def update_parking_releases(self, user_id, release_id, current_status: ParkingReleaseStatus):
         return self.repository.update_parking_releases(user_id, release_id, current_status)
 
+    def update_release_status(self, release_id, current_status: ParkingReleaseStatus):
+        return self.repository.update_release_status(release_id, current_status)
+
+    def accept_spot_if_free(self, release_id, user_id):
+        return self.repository.accept_spot_if_free(release_id, user_id)
+
     def get_release_owner(self, release_id):
         return self.repository.get_release_owner(release_id)
 
@@ -134,3 +140,6 @@ class SpotReleaseService:
 
     def update_releases_statuses_to_not_found_by_date(self, rq_date: date):
         return self.repository.update_releases_statuses_to_not_found_by_date(rq_date)
+
+    def mark_releases_not_found_if_only_cancelled(self, confirmations):
+        return self.repository.mark_releases_not_found_if_only_cancelled(confirmations)

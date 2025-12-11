@@ -92,6 +92,34 @@ class SpotRequestRepository:
             )
             return False
 
+    def get_all_spot_candidates(self, rq_date: date):
+        """
+        Получает ВСЕХ кандидатов для распределения на указанную дату
+        только со статусом PENDING.
+        """
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(f'''
+                    SELECT prq.id as request_id, prq.user_id, u.rating, u.tg_id
+                    FROM {settings.DB_SCHEMA}.parking_requests prq
+                    JOIN {settings.DB_SCHEMA}.users u ON prq.user_id = u.user_id
+                    WHERE prq.request_date = %s
+                      AND prq.status = 'PENDING'
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM {settings.DB_SCHEMA}.parking_releases prl
+                          WHERE prl.user_id = prq.user_id
+                            AND prl.release_date = %s
+                            AND prl.status IN ('PENDING', 'ACCEPTED', 'WAITING')
+                      )
+                    ORDER BY u.rating
+                ''', (rq_date, rq_date))
+
+                return cur.fetchall()
+        except Exception as e:
+            log_sync(log_message=f"Ошибка получения всех кандидатов: {e}")
+            return []
+
     def update_parking_request_status(self, request_id, current_status: ParkingRequestStatus):
         """
             Обновляет статус запроса на парковку.
@@ -225,6 +253,11 @@ class SpotRequestRepository:
             )
 
     def update_requests_statuses_to_not_found_by_date(self, rq_date: date):
+        """
+            Переводит все запросы в статус NOT_FOUND, если:
+            - их текущий статус PENDING,
+            - их дата меньше указанной даты (просроченные запросы).
+        """
         try:
             with self._get_cursor() as cur:
                 cur.execute(f'''
@@ -238,3 +271,29 @@ class SpotRequestRepository:
             log_sync(
                 log_message=f"Ошибка обновления статусов запросов: {e}"
             )
+
+    def bulk_cancel_requests_by_confirmations(self, confirmations):
+        """
+            Переводит связанные с подтверждениями запросы в статус CANCELED.
+            confirmations: iterable[(conf_id, user_id, request_id, release_id, message_id, tg_id)]
+        """
+        request_ids = {c[2] for c in confirmations}
+        if not request_ids:
+            return None
+
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(
+                    f"""
+                    UPDATE {settings.DB_SCHEMA}.parking_requests
+                    SET status = 'CANCELED',
+                        processed_at = CURRENT_TIMESTAMP
+                    WHERE id = ANY(%s::uuid[])
+                    """,
+                    (list(request_ids),),
+                )
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка массового обновления статуса запросов в CANCELED: {e}"
+            )
+            return None
