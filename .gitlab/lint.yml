@@ -1,0 +1,33 @@
+lint:
+  image: python:3.12
+  stage: test
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - if: '$CI_COMMIT_BRANCH != "main"'
+      when: manual
+  script:
+    - apk add --no-cache curl
+    - pip install --no-cache-dir pylint -r requirements.txt
+    - files=$(find . -name "*.py")
+    - pylint $files
+
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        curl -s -X POST "https://api.telegram.org/bot${CI_BOT_TOKEN}/sendMessage" \
+          -d "chat_id=${CI_GROUP_ID}" \
+          -d "message_thread_id=${CI_GROUP_TOPIC_ID}" \
+          -d "parse_mode=HTML" \
+          -d "text=<b>✅ Lint</b>%0A<b>Project:</b> $CI_PROJECT_NAME%0A<b>Branch:</b> $CI_COMMIT_BRANCH%0A<b>Status:</b> SUCCESS%0A<b>Pipeline:</b> $CI_PIPELINE_URL" || true
+      else
+        curl -s -X POST "https://api.telegram.org/bot${CI_BOT_TOKEN}/sendMessage" \
+          -d "chat_id=${CI_GROUP_ID}" \
+          -d "message_thread_id=${CI_GROUP_TOPIC_ID}" \
+          -d "parse_mode=HTML" \
+          -d "text=<b>⚠️ Lint</b>%0A<b>Project:</b> $CI_PROJECT_NAME%0A<b>Branch:</b> $CI_COMMIT_BRANCH%0A<b>Status:</b> FAILED (allow_failure)%0A<b>Pipeline:</b> $CI_PIPELINE_URL" || true
+      fi
+
+  tags:
+    - docker
+  allow_failure: true
