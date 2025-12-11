@@ -10,7 +10,9 @@ from .inline import (
     confirmation_delete_schedule_markup,
     schedule_selection_markup,
     date_list_markup,
-    main_admin_markup
+    main_admin_markup,
+    confirm_clear_tables_admin,
+    back_to_main_admin
 )
 
 __all__ = [
@@ -25,5 +27,7 @@ __all__ = [
     'confirmation_delete_schedule_markup',
     'schedule_selection_markup',
     'date_list_markup',
-    'main_admin_markup'
+    'main_admin_markup',
+    'back_to_main_admin',
+    'confirm_clear_tables_admin'
 ]

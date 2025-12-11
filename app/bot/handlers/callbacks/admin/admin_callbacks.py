@@ -2,6 +2,7 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery
 
 from app.bot.constants.callback_data import CallbackData
+from app.bot.handlers.callbacks.admin.utils.clear_tables_util import clear_tables_request, confirm_clear_tables
 from app.bot.handlers.callbacks.admin.utils.for_admin_statistics import for_admin_statistics
 from app.bot.keyboards import main_admin_markup
 from app.logs.log_builder import log
@@ -29,4 +30,22 @@ def setup_admin_callbacks(router: Router) -> None:
         except Exception as e:
             await log(
                 log_message=f"Ошибка в all_statistics_callback: {e}"
+            )
+
+    @router.callback_query(F.data == CallbackData.CLEAR_TABLES)
+    async def clear_tables_callback(callback: CallbackQuery):
+        try:
+            await clear_tables_request(callback)
+        except Exception as e:
+            await log(
+                log_message=f"Ошибка в clear_tables_callback: {e}"
+            )
+
+    @router.callback_query(F.data == CallbackData.YES_CLEAR_TABLES)
+    async def confirm_clear_tables_callback(callback: CallbackQuery):
+        try:
+            await confirm_clear_tables(callback)
+        except Exception as e:
+            await log(
+                log_message=f"Ошибка в confirm_clear_tables_callback: {e}"
             )

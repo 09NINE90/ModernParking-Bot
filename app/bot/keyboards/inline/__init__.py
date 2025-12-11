@@ -27,7 +27,9 @@ from .dates import (
 )
 
 from .admin import (
-    main_admin_markup
+    main_admin_markup,
+    confirm_clear_tables_admin,
+    back_to_main_admin
 )
 
 __all__ = [
@@ -57,5 +59,7 @@ __all__ = [
     'confirmation_revoke_release_markup',
 
     # Admin
-    'main_admin_markup'
+    'main_admin_markup',
+    'back_to_main_admin',
+    'confirm_clear_tables_admin'
 ]

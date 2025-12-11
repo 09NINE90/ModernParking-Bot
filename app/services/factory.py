@@ -1,5 +1,6 @@
 from app.repositories import UserRepository, SpotReleaseRepository, SpotRequestRepository, SpotConfirmationRepository, \
-    StatisticsRepository, ReminderSpotRepository, SpotRequestsScheduleRepository
+    StatisticsRepository, ReminderSpotRepository, SpotRequestsScheduleRepository, AdminRepository
+from app.services.admin_service import AdminService
 from app.services.reminder_spot_service import ReminderSpotService
 from app.services.spot_confirmation_service import SpotConfirmationService
 from app.services.spot_request_service import SpotRequestService
@@ -49,3 +50,8 @@ class ServiceFactory:
     def create_spot_requests_schedule_service(connection) -> SpotRequestsScheduleService:
         repository = SpotRequestsScheduleRepository(connection)
         return SpotRequestsScheduleService(repository)
+
+    @staticmethod
+    def create_admin_service(connection) -> AdminService:
+        repository = AdminRepository(connection)
+        return AdminService(repository)

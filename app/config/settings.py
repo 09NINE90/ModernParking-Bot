@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "DEBUG"
     LOG_FILE: str = "bot.log"
 
+    STAND: str = "DEV"
+
     class Config:
         env_file = ".env"
         case_sensitive = False
