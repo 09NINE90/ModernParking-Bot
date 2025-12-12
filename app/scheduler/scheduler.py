@@ -40,7 +40,7 @@ def setup_scheduler() -> AsyncIOScheduler:
     scheduler.add_job(
         get_weekly_statistics,
         trigger=CronTrigger(
-            hour=18,
+            hour=19, # todo поставить 18:00
             minute=30,
             day_of_week='fri'
         ),

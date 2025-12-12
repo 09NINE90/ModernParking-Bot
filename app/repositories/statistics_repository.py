@@ -155,7 +155,7 @@ class StatisticsRepository:
                                 release_stats AS (
                                     SELECT 
                                         COUNT(*) as total,
-                                        COUNT(*) FILTER (WHERE status = 'ACCEPTED') as accepted,
+                                        COUNT(*) FILTER (WHERE status = 'ACCEPTED') as accepted
                                     FROM {settings.DB_SCHEMA}.parking_releases
                                     WHERE release_date BETWEEN %s AND %s
                                 )
