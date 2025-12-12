@@ -41,7 +41,7 @@ def setup_scheduler() -> AsyncIOScheduler:
         get_weekly_statistics,
         trigger=CronTrigger(
             hour=19, # todo поставить 18:00
-            minute=15,
+            minute=30,
             day_of_week='fri'
         ),
         id='weekly_statistics'
