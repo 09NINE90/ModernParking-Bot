@@ -258,7 +258,8 @@ class SpotReleaseRepository:
                 cur.execute(f'''
                         UPDATE {settings.DB_SCHEMA}.parking_releases
                         SET user_id_took = %s,
-                            status       = %s
+                            status       = %s,
+                            updated_at   = CURRENT_TIMESTAMP
                         WHERE id = %s
                         RETURNING id
                         ''', (user_id, current_status.name, release_id))
@@ -277,7 +278,8 @@ class SpotReleaseRepository:
             with self._get_cursor() as cur:
                 cur.execute(f'''
                                 UPDATE {settings.DB_SCHEMA}.parking_releases
-                                SET status       = %s
+                                SET status       = %s,
+                                    updated_at   = CURRENT_TIMESTAMP
                                 WHERE id = %s
                                 RETURNING id
                                 ''', (current_status.name, release_id))
@@ -297,7 +299,9 @@ class SpotReleaseRepository:
             with self._get_cursor() as cur:
                 cur.execute(f"""
                     UPDATE {settings.DB_SCHEMA}.parking_releases
-                    SET status = 'ACCEPTED', user_id_took = %s
+                    SET status = 'ACCEPTED', 
+                        user_id_took = %s,
+                        updated_at   = CURRENT_TIMESTAMP
                     WHERE id = %s
                       AND status = 'WAITING'
                     RETURNING id
@@ -360,7 +364,8 @@ class SpotReleaseRepository:
                 cur.execute(f'''
                         UPDATE {settings.DB_SCHEMA}.parking_releases
                         SET user_id_took = NULL,
-                            status       = %s
+                            status       = %s,
+                            updated_at   = CURRENT_TIMESTAMP
                         WHERE id = %s
                         ''', (current_status.name, release_id))
         except Exception as e:
@@ -491,7 +496,8 @@ class SpotReleaseRepository:
             with self._get_cursor() as cur:
                 cur.execute(f'''
                             UPDATE {settings.DB_SCHEMA}.parking_releases
-                            SET status = 'NOT_FOUND'
+                            SET status = 'NOT_FOUND',
+                                updated_at   = CURRENT_TIMESTAMP
                             WHERE status = 'PENDING'
                                 AND release_date < %s
                             ''',
@@ -517,7 +523,8 @@ class SpotReleaseRepository:
                 cur.execute(
                     f"""
                         UPDATE {settings.DB_SCHEMA}.parking_releases prl
-                        SET status = 'NOT_FOUND'
+                        SET status = 'NOT_FOUND',
+                            updated_at   = CURRENT_TIMESTAMP
                         WHERE prl.id = ANY(%s::uuid[])
                           AND prl.status IN ('PENDING', 'WAITING')
                           AND NOT EXISTS (
