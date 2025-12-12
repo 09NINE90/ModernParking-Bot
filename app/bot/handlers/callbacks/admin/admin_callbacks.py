@@ -3,7 +3,8 @@ from aiogram.types import CallbackQuery
 
 from app.bot.constants.callback_data import CallbackData
 from app.bot.handlers.callbacks.admin.utils.clear_tables_util import clear_tables_request, confirm_clear_tables
-from app.bot.handlers.callbacks.admin.utils.for_admin_statistics import for_admin_statistics
+from app.bot.handlers.callbacks.admin.utils.for_admin_statistics import for_admin_statistics, get_period_stats, \
+    show_period_stats_details
 from app.bot.keyboards import main_admin_markup
 from app.logs.log_builder import log
 
@@ -48,4 +49,27 @@ def setup_admin_callbacks(router: Router) -> None:
         except Exception as e:
             await log(
                 log_message=f"Ошибка в confirm_clear_tables_callback: {e}"
+            )
+
+    @router.callback_query(F.data.endswith(CallbackData.POSTFIX_STATS))
+    async def get_period_stats_callback(callback: CallbackQuery):
+        try:
+            period_name = callback.data.replace(CallbackData.POSTFIX_STATS, "")
+            await get_period_stats(callback, period_name)
+        except Exception as e:
+            await log(
+                log_message=f"Ошибка в confirm_clear_tables_callback: {e}"
+            )
+
+    @router.callback_query(
+        F.data.regexp(r"^(week|month|quarter|year)_.+(?<!_stats)$")
+    )
+    async def period_stats_details_callback(callback: CallbackQuery):
+        try:
+            data = callback.data
+            period_name, _, period_display = data.partition("_")
+            await show_period_stats_details(callback, period_name, period_display)
+        except Exception as e:
+            await log(
+                log_message=f"Ошибка в period_stats_details_callback: {e}",
             )

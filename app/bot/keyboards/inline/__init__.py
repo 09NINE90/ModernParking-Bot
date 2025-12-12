@@ -29,7 +29,9 @@ from .dates import (
 from .admin import (
     main_admin_markup,
     confirm_clear_tables_admin,
-    back_to_main_admin
+    back_to_main_admin,
+    create_stats_period_markup,
+    back_to_stats_period_markup
 )
 
 __all__ = [
@@ -61,5 +63,7 @@ __all__ = [
     # Admin
     'main_admin_markup',
     'back_to_main_admin',
-    'confirm_clear_tables_admin'
+    'confirm_clear_tables_admin',
+    'create_stats_period_markup',
+    'back_to_stats_period_markup'
 ]
