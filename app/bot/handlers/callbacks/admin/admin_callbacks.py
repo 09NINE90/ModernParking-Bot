@@ -58,7 +58,7 @@ def setup_admin_callbacks(router: Router) -> None:
             await get_period_stats(callback, period_name)
         except Exception as e:
             await log(
-                log_message=f"Ошибка в confirm_clear_tables_callback: {e}"
+                log_message=f"Ошибка в get_period_stats_callback: {e}"
             )
 
     @router.callback_query(
