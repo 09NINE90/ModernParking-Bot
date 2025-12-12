@@ -4,6 +4,7 @@ from .revoke_requests_dto import RevokeRequest
 from .parking_reminder_dto import ParkingReminder
 from .parking_transfers_dto import ParkingTransfer
 from .spot_confirmation_dto import SpotConfirmationDTO
+from .stats_period_dto import ParkingStatsPeriodDTO
 
 __all__ = [
     'ScheduleDto',
@@ -11,5 +12,6 @@ __all__ = [
     'RevokeRequest',
     'ParkingReminder',
     'ParkingTransfer',
-    'SpotConfirmationDTO'
+    'SpotConfirmationDTO',
+    'ParkingStatsPeriodDTO'
 ]

@@ -1,4 +1,4 @@
-from .dto import ScheduleDto, RevokeRequest, RevokeRelease, ParkingReminder, ParkingTransfer, SpotConfirmationDTO
+from .dto import ScheduleDto, RevokeRequest, RevokeRelease, ParkingReminder, ParkingTransfer, SpotConfirmationDTO, ParkingStatsPeriodDTO
 from .entities import ParkingRequest, ParkingRelease
 from .enumz import UserRoles, ParkingReleaseStatus, ParkingRequestStatus, ConfirmationStatus
 
@@ -14,5 +14,6 @@ __all__ = [
     'UserRoles',
     'ParkingReleaseStatus',
     'ParkingRequestStatus',
-    'ConfirmationStatus'
+    'ConfirmationStatus',
+    'ParkingStatsPeriodDTO'
 ]
