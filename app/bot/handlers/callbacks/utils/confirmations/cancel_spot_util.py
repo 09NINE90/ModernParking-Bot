@@ -2,11 +2,11 @@ from datetime import datetime
 
 from aiogram.types import CallbackQuery
 
-from app.bot.keyboards import back_to_main_markup
 from app.bot.utils import get_user_full_mention
 from app.data import get_db_connection
 from app.data.models import SpotConfirmationDTO, ParkingRequestStatus, ConfirmationStatus, ParkingReleaseStatus
 from app.logs.log_builder import log, LogType
+from app.scheduler.schedule_utils import cancel_scheduled_cancellation
 from app.services import ServiceFactory
 from app.utils.daily_statistics_util import update_daily_statistics_by_date
 
@@ -14,12 +14,6 @@ from app.utils.daily_statistics_util import update_daily_statistics_by_date
 async def cancel_spot(callback: CallbackQuery):
     """
         Обрабатывает отмену занятия места пользователем.
-        Логика:
-        - находим своё WAITING-подтверждение;
-        - помечаем request как CANCELED;
-        - помечаем confirmation как REJECTED;
-        - редактируем сообщение пользователю;
-        - логируем и обновляем статистику.
     """
     tg_user_id = callback.from_user.id
     user_name = await get_user_full_mention(tg_user_id, False)
@@ -41,27 +35,22 @@ async def cancel_spot(callback: CallbackQuery):
 
         spot_confirmation_data = get_spot_confirmation_data_from_result(result)
 
-        # 1. Помечаем заявку как CANCELED
+        await cancel_scheduled_cancellation(spot_confirmation_data)
+
+        spot_release_service.update_parking_release_set_free(
+            release_id=spot_confirmation_data.release_id,
+            current_status=ParkingReleaseStatus.PENDING
+        )
+
         spot_request_service.update_parking_request_status(
             request_id=spot_confirmation_data.request_id,
             current_status=ParkingRequestStatus.CANCELED
         )
 
-        # 2. Статус подтверждения -> REJECTED
         spot_confirmation_service.set_status(
             spot_confirmation_id=spot_confirmation_data.confirmation_id,
             status=ConfirmationStatus.REJECTED
         )
-
-        # 2.1. Если больше нет WAITING по этому релизу — возвращаем релиз в PENDING
-        has_waiting = spot_confirmation_service.has_waiting_confirmations_for_release(
-            release_id=spot_confirmation_data.release_id
-        )
-        if not has_waiting:
-            spot_release_service.update_release_status(
-                release_id=spot_confirmation_data.release_id,
-                current_status=ParkingReleaseStatus.PENDING
-            )
 
         request_status = spot_request_service.get_request_status_by_id(spot_confirmation_data.request_id)
         release_status = spot_release_service.get_release_status_by_id(spot_confirmation_data.release_id)
@@ -73,8 +62,7 @@ async def cancel_spot(callback: CallbackQuery):
                 f"ℹ️ Вы успешно отказались от места №{spot_confirmation_data.spot_number} "
                 f"на {spot_confirmation_data.assignment_date.strftime('%d.%m.%Y')}\n\n"
                 "️️⚠️ <i>Я больше не буду предлагать вам места на эту дату</i>"
-            ),
-            reply_markup=back_to_main_markup
+            )
         )
 
         datetime_now = datetime.now()
@@ -88,6 +76,9 @@ async def cancel_spot(callback: CallbackQuery):
                 f"request_status = {request_status}"
             )
         )
+
+        from app.bot.handlers.callbacks.utils.distribution_spots_util import distribute_parking_spots
+        await distribute_parking_spots()
 
         return None
 
