@@ -5,3 +5,4 @@ class NotificationTypes(Enum):
     SPOT_FOUND = "SPOT_FOUND"
     SPOT_REMINDER = "SPOT_REMINDER"
     BASE = "BASE"
+    WITHOUT_MARKUP = "WITHOUT_MARKUP"
