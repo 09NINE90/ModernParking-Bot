@@ -29,7 +29,7 @@ async def auto_cancel_spot(confirmation_data: SpotConfirmationDTO):
             spot_request_service.update_parking_request_status(request_id, ParkingRequestStatus.PENDING)
             spot_confirmation_service.set_status(confirmation_id, ConfirmationStatus.CANCELLED)
 
-            message_sent_id = spot_confirmation_service.get_message_sent_id(db_user_id, release_id, request_id)
+            message_sent_id = spot_confirmation_service.get_message_sent_id(confirmation_id)
 
             message_text = await to_user_about_time_confirmation_spent(confirmation_data)
             await notify_user(confirmation_data.tg_user_id, message_text, NotificationTypes.WITHOUT_MARKUP)
@@ -45,7 +45,7 @@ async def auto_cancel_spot(confirmation_data: SpotConfirmationDTO):
             await log(
                 log_type=LogType.INFO,
                 log_message=f"{user_name} не успел принять место\n"
-                            f"Запрос отменен автоматически"
+                            f"Запрос отменен автоматически\n"
                             f"release_status = {release_status}\n"
                             f"request_status = {request_status}"
             )

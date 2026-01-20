@@ -11,7 +11,7 @@ async def create_default_schedule(callback: CallbackQuery, state: FSMContext):
 
     await callback.message.edit_text(
         text="📅 <b>Настройте регулярное расписание</b>\n\n"
-             "Выберите дни, когда вам нужно занимать места:\n\n"
+             "Выберите дни, когда Вам нужно занимать места:\n\n"
              "🔔 <i>Каждое воскресенье я буду уточнять, нужно ли создавать брони на выбранные дни</i>",
         reply_markup=create_default_schedule_markup()
     )

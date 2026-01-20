@@ -31,8 +31,8 @@ class SpotConfirmationRepository:
         try:
             with self._get_cursor() as cur:
                 cur.execute(f"""
-                        INSERT INTO {settings.DB_SCHEMA}.spot_confirmations (user_id, release_id, request_id)
-                        VALUES (%s, %s, %s)
+                        INSERT INTO {settings.DB_SCHEMA}.spot_confirmations (id, user_id, release_id, request_id)
+                        VALUES (gen_random_uuid(), %s, %s, %s)
                         RETURNING id
                         """, (user_id, release_id, request_id,))
 
@@ -138,17 +138,15 @@ class SpotConfirmationRepository:
             )
             return None
 
-    def get_message_sent_id(self, user_id, release_id, request_id):
+    def get_message_sent_id(self, confirmation_id):
         try:
             with self._get_cursor() as cur:
                 cur.execute(f"""
                                 SELECT message_sent_id 
                                 FROM {settings.DB_SCHEMA}.spot_confirmations 
-                                WHERE user_id = %s 
-                                    AND release_id = %s 
-                                    AND request_id = %s
+                                WHERE id = %s
                                 """,
-                            (user_id, release_id, request_id,))
+                            (confirmation_id,))
 
                 result = cur.fetchone()
 
@@ -157,7 +155,7 @@ class SpotConfirmationRepository:
                 return None
         except Exception as e:
             log_sync(
-                log_message=f"Ошибка получения ID сообщения для подтверждения user_id: {user_id}, request_id: {request_id}: {e}"
+                log_message=f"Ошибка получения ID сообщения для подтверждения confirmation_id: {confirmation_id}: {e}"
             )
             return None
 

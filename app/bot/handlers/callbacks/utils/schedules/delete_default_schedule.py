@@ -35,7 +35,7 @@ async def delete_default_schedule(callback: CallbackQuery, state: FSMContext):
             )
         else:
             await callback.message.edit_text(
-                text="👀 У вас нет сохраненных расписаний для удаления.",
+                text="👀 У Вас нет сохраненных расписаний для удаления.",
                 reply_markup=back_to_main_markup
             )
 

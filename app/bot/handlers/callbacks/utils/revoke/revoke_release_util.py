@@ -30,12 +30,12 @@ async def choose_release_for_revocation(callback: CallbackQuery):
         )
         if releases_for_revoke is None:
             await callback.message.edit_text(
-                text="У вас нет освобожденных мест, которые никто не занял",
+                text="У Вас нет освобожденных мест, которые никто не занял",
                 reply_markup=back_to_main_markup
             )
             return None
 
-        message_text = f"Список мест, которые вы освободили от <u>{today.strftime('%d.%m.%Y')}</u>:"
+        message_text = f"Список мест, которые Вы освободили от <u>{today.strftime('%d.%m.%Y')}</u>:"
         markup = revoke_releases_markup(releases_for_revoke)
         await callback.message.edit_text(
             text=message_text,

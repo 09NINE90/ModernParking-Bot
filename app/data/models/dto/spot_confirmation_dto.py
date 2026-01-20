@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from typing import Optional
 
@@ -6,7 +6,7 @@ from typing import Optional
 @dataclass
 class SpotConfirmationDTO:
     """DTO для передачи данных о подтверждении парковочного места"""
-    confirmation_id: str = None
+    _confirmation_id: Optional[str] = field(default=None, init=False)
     db_user_id: str = None
     tg_user_id: int = None
     spot_number: int = None
@@ -23,3 +23,16 @@ class SpotConfirmationDTO:
             raise ValueError("spot_number должен быть положительным integer")
         if not isinstance(self.assignment_date, date):
             raise ValueError("assignment_date должен быть datetime.date")
+
+    @property
+    def confirmation_id(self) -> Optional[str]:
+        return self._confirmation_id
+
+    @confirmation_id.setter
+    def confirmation_id(self, value: Optional[str]) -> None:
+        """Сеттер для confirmation_id с валидацией"""
+        if value is not None and not isinstance(value, str):
+            raise ValueError("confirmation_id должен быть строкой или None")
+        if value and len(value.strip()) == 0:
+            raise ValueError("confirmation_id не может быть пустой строкой")
+        self._confirmation_id = value

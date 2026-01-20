@@ -9,6 +9,7 @@ from app.bot.utils import get_user_full_mention
 from app.data import get_db_connection
 from app.data.models import SpotConfirmationDTO, ParkingRequestStatus, ConfirmationStatus, ParkingReleaseStatus
 from app.logs.log_builder import log, LogType
+from app.scheduler.schedule_utils import cancel_scheduled_cancellation
 from app.services import ServiceFactory
 from app.utils.daily_statistics_util import update_daily_statistics_by_date
 
@@ -46,6 +47,8 @@ async def take_spot(callback: CallbackQuery):
             return None
 
         spot_confirmation_data = get_spot_confirmation_data_from_result(result)
+
+        await cancel_scheduled_cancellation(spot_confirmation_data)
 
         spot_release_service.update_parking_releases(
             user_id=db_user_id,
@@ -98,8 +101,7 @@ async def take_spot(callback: CallbackQuery):
 
 
 def get_spot_confirmation_data_from_result(result):
-    return SpotConfirmationDTO(
-        confirmation_id=result[0],
+    dto = SpotConfirmationDTO(
         db_user_id=result[1],
         tg_user_id=result[2],
         spot_number=result[3],
@@ -109,6 +111,10 @@ def get_spot_confirmation_data_from_result(result):
         message_sent_id=result[7],
     )
 
+    if result[0]:
+        dto.confirmation_id = result[0]
+
+    return dto
 
 async def notify_release_owner(spot_release_service, spot_confirmation_data):
     release_owner = spot_release_service.get_release_owner(

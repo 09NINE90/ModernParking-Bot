@@ -83,7 +83,7 @@ async def cancel_spot_by_reminder(callback: CallbackQuery):
         await callback.message.edit_text(
             f"ℹ️ Вы успешно отказались от места №{reminder_data.spot_id} "
             f"на {reminder_data.release_date.strftime('%d.%m.%Y')}\n\n"
-            "️️⚠️ <i>Я больше не буду предлагать вам места на эту дату</i>",
+            "️️⚠️ <i>Я больше не буду предлагать Вам места на эту дату</i>",
             reply_markup=back_to_main_markup
         )
 

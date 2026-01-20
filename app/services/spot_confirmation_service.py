@@ -27,8 +27,8 @@ class SpotConfirmationService:
     def set_message_sent_id(self, spot_confirmation_id, message_sent_id):
         return self.repository.set_message_sent_id(spot_confirmation_id, message_sent_id)
 
-    def get_message_sent_id(self, user_id, release_id, request_id):
-        return self.repository.get_message_sent_id(user_id, release_id, request_id)
+    def get_message_sent_id(self, confirmation_id):
+        return self.repository.get_message_sent_id(confirmation_id)
 
     def set_status(self, spot_confirmation_id, status):
         return self.repository.set_status(spot_confirmation_id, status)

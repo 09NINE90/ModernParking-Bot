@@ -61,7 +61,7 @@ async def cancel_spot(callback: CallbackQuery):
             text=(
                 f"ℹ️ Вы успешно отказались от места №{spot_confirmation_data.spot_number} "
                 f"на {spot_confirmation_data.assignment_date.strftime('%d.%m.%Y')}\n\n"
-                "️️⚠️ <i>Я больше не буду предлагать вам места на эту дату</i>"
+                "️️⚠️ <i>Я больше не буду предлагать Вам места на эту дату</i>"
             )
         )
 
@@ -84,8 +84,7 @@ async def cancel_spot(callback: CallbackQuery):
 
 
 def get_spot_confirmation_data_from_result(result):
-    return SpotConfirmationDTO(
-        confirmation_id=result[0],
+    dto = SpotConfirmationDTO(
         db_user_id=result[1],
         tg_user_id=result[2],
         spot_number=result[3],
@@ -94,3 +93,8 @@ def get_spot_confirmation_data_from_result(result):
         request_id=result[6],
         message_sent_id=result[7],
     )
+
+    if result[0]:
+        dto.confirmation_id = result[0]
+
+    return dto

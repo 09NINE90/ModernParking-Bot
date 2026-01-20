@@ -87,7 +87,7 @@ async def show_release_calendar_message(message: types.Message, state: FSMContex
 
         if not is_has_available_dates(existing_dates, today):
             await message.answer(
-                f"На ближайшие 7 дней вы освободили место <b>№{spot_number}</b> на все доступные даты.\n\n"
+                f"На ближайшие 7 дней Вы освободили место <b>№{spot_number}</b> на все доступные даты.\n\n"
                 "<i>Попробуйте отправить запрос позже, когда будут доступны новые даты.</i>",
                 reply_markup=back_to_main_markup
             )
