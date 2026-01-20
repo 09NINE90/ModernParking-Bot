@@ -92,5 +92,8 @@ class SpotRequestService:
     def update_requests_statuses_to_not_found_by_date(self, rq_date: date):
         return self.repository.update_requests_statuses_to_not_found_by_date(rq_date)
 
+    def update_requests_statuses_to_canceled_by_date(self, rq_date: date):
+        return self.repository.update_requests_statuses_to_canceled_by_date(rq_date)
+
     def bulk_cancel_requests_by_confirmations(self, confirmations):
         return self.repository.bulk_cancel_requests_by_confirmations(confirmations)

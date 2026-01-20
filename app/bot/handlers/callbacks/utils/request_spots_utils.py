@@ -39,7 +39,7 @@ async def show_request_calendar(callback: CallbackQuery, state: FSMContext):
 
         if not is_has_available_dates(existing_dates, today):
             await callback.message.edit_text(
-                "На ближайшие 7 дней у вас уже есть запросы на все рабочие даты.\n\n"
+                "На ближайшие 7 дней у Вас уже есть запросы на все рабочие даты.\n\n"
                 "<i>Попробуйте отправить запрос позже, когда будут доступны новые даты.</i>",
                 reply_markup=back_to_main_markup
             )
@@ -91,7 +91,7 @@ async def process_spot_request(callback: CallbackQuery, state: FSMContext, date_
 
         if user_spot:
             await callback.message.answer(
-                f"ℹ️ У вас уже есть место на {request_date.strftime('%d.%m.%Y')}",
+                f"ℹ️ У Вас уже есть место на {request_date.strftime('%d.%m.%Y')}",
                 reply_markup=back_to_main_markup
             )
             return None

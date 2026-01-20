@@ -272,6 +272,26 @@ class SpotRequestRepository:
                 log_message=f"Ошибка обновления статусов запросов: {e}"
             )
 
+    def update_requests_statuses_to_canceled_by_date(self, rq_date: date):
+        """
+            Переводит все запросы в статус CANCELED, если:
+            - их текущий статус PENDING или WAITING_CONFIRMATION,
+            - их дата меньше указанной даты (просроченные запросы).
+        """
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(f'''
+                                    UPDATE {settings.DB_SCHEMA}.parking_requests
+                                    SET status = 'CANCELED'
+                                    WHERE status = 'PENDING' OR status = 'WAITING_CONFIRMATION'
+                                        AND request_date < %s
+                                    ''',
+                            (rq_date,))
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка обновления статусов запросов: {e}"
+            )
+
     def bulk_cancel_requests_by_confirmations(self, confirmations):
         """
             Переводит связанные с подтверждениями запросы в статус CANCELED.

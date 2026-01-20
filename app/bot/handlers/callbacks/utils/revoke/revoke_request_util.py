@@ -34,7 +34,7 @@ async def choose_request_for_revocation(callback: CallbackQuery, state: FSMConte
             )
             return None
 
-        message_text = f"Список дат, на которые вы запрашивали места от <u>{today.strftime('%d.%m.%Y')}</u>:"
+        message_text = f"Список дат, на которые Вы запрашивали места от <u>{today.strftime('%d.%m.%Y')}</u>:"
         markup = revoke_requests_markup(requests_for_revoke)
         await callback.message.edit_text(
             text=message_text,
@@ -60,13 +60,13 @@ async def confirmation_revoke_request(callback: CallbackQuery, request_id):
             markup_text = 'отозвать'
             message_text = (f"Вы уверены, что хотите <b>отозвать запрос</b> "
                             f"на парковочное место на дату <u>{request.request_date.strftime('%d.%m.%Y')}</u>?\n\n"
-                            f"⚠️ <i>После этого вы больше не будете участвовать в распределении "
+                            f"⚠️ <i>После этого Вы больше не будете участвовать в распределении "
                             f"парковочных мест на эту дату</i>")
         else:
             markup_text = 'отказаться'
             message_text = (f"Вы уверены, что хотите <b>отказаться от места "
                             f"№{request.spot_id}</b> на дату <u>{request.request_date.strftime('%d.%m.%Y')}</u>?\n\n"
-                            f"⚠️ <i>После этого вы больше не будете участвовать в распределении "
+                            f"⚠️ <i>После этого Вы больше не будете участвовать в распределении "
                             f"парковочных мест на эту дату</i>")
 
         await callback.message.edit_text(

@@ -77,7 +77,7 @@ def update_message_text_by_request(message_text, current_spots_requests):
             message_text += (f"📅 Дата: {current_spot.request_date.strftime('%d.%m.%Y')}\n"
                              f"{emoji_status} Статус: {current_spot.status.display_name}{spot_info}\n\n")
     else:
-        message_text += "\nУ вас пока что нет актуальных запросов на парковочные места\n"
+        message_text += "\nУ Вас пока что нет актуальных запросов на парковочные места\n"
 
     return message_text
 
@@ -91,6 +91,6 @@ def update_message_text_by_releases(message_text, current_spots_releases):
                              f"📍 Место: №{current_spot.spot_id}\n"
                              f"{emoji_status} Статус: {current_spot.status.display_name}\n\n")
     else:
-        message_text += "\nУ вас пока что нет актуальных освобожденных парковочных мест\n"
+        message_text += "\nУ Вас пока что нет актуальных освобожденных парковочных мест\n"
 
     return message_text
