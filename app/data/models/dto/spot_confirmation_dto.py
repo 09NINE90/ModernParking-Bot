@@ -1,0 +1,38 @@
+from dataclasses import dataclass, field
+from datetime import date
+from typing import Optional
+
+
+@dataclass
+class SpotConfirmationDTO:
+    """DTO для передачи данных о подтверждении парковочного места"""
+    _confirmation_id: Optional[str] = field(default=None, init=False)
+    db_user_id: str = None
+    tg_user_id: int = None
+    spot_number: int = None
+    assignment_date: date = None
+    release_id: Optional[str] = None
+    request_id: Optional[str] = None
+    message_sent_id: int = None
+
+    def __post_init__(self):
+        """Валидация данных после инициализации"""
+        if not isinstance(self.tg_user_id, int) or self.tg_user_id <= 0:
+            raise ValueError("tg_user_id должен быть положительным integer")
+        if not isinstance(self.spot_number, int) or self.spot_number <= 0:
+            raise ValueError("spot_number должен быть положительным integer")
+        if not isinstance(self.assignment_date, date):
+            raise ValueError("assignment_date должен быть datetime.date")
+
+    @property
+    def confirmation_id(self) -> Optional[str]:
+        return self._confirmation_id
+
+    @confirmation_id.setter
+    def confirmation_id(self, value: Optional[str]) -> None:
+        """Сеттер для confirmation_id с валидацией"""
+        if value is not None and not isinstance(value, str):
+            raise ValueError("confirmation_id должен быть строкой или None")
+        if value and len(value.strip()) == 0:
+            raise ValueError("confirmation_id не может быть пустой строкой")
+        self._confirmation_id = value

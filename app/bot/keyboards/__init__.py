@@ -1,0 +1,37 @@
+from .inline import (
+    back_to_main_markup,
+    feedback_markup,
+    main_markup,
+    found_spot_markup,
+    reminder_spot_confirmation_markup,
+    success_save_default_schedule_markup,
+    create_default_schedule_markup,
+    create_delete_schedules_keyboard,
+    confirmation_delete_schedule_markup,
+    schedule_selection_markup,
+    date_list_markup,
+    main_admin_markup,
+    confirm_clear_tables_admin,
+    back_to_main_admin,
+    create_stats_period_markup,
+    back_to_stats_period_markup
+)
+
+__all__ = [
+    'back_to_main_markup',
+    'feedback_markup',
+    'main_markup',
+    'found_spot_markup',
+    'reminder_spot_confirmation_markup',
+    'success_save_default_schedule_markup',
+    'create_default_schedule_markup',
+    'create_delete_schedules_keyboard',
+    'confirmation_delete_schedule_markup',
+    'schedule_selection_markup',
+    'date_list_markup',
+    'main_admin_markup',
+    'back_to_main_admin',
+    'confirm_clear_tables_admin',
+    'create_stats_period_markup',
+    'back_to_stats_period_markup'
+]

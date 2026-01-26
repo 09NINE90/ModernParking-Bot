@@ -1,0 +1,28 @@
+.logs_template:
+  image: ubuntu:22.04
+  when: manual
+  before_script:
+    - apt-get update && apt-get install -y openssh-client sudo curl
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+    - ssh-keyscan -t ed25519 $SSH_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh $SSH_USER@$SSH_HOST "sudo docker logs -f $CONTAINER_NAME_VAR"
+  tags:
+    - docker
+
+logs_ift:
+  extends: .logs_template
+  stage: logs
+  needs: ["deploy_ift"]
+  variables:
+    CONTAINER_NAME_VAR: $CONTAINER_NAME_IFT
+
+logs_prom:
+  extends: .logs_template
+  stage: logs
+  needs: ["deploy_ift"]
+  variables:
+    CONTAINER_NAME_VAR: $CONTAINER_NAME

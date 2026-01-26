@@ -1,0 +1,2 @@
+ALTER TABLE DEFAULT_SCHEMA.parking_requests
+    ADD COLUMN is_auto_request BOOLEAN DEFAULT FALSE
