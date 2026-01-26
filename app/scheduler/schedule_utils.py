@@ -20,6 +20,26 @@ def get_scheduler() -> AsyncIOScheduler:
     return _scheduler
 
 
+async def cancel_scheduled_cancellation_by_reminder(reminder_data: ParkingReminder):
+    """
+        Отменяет запланированную автоматическую отмену места
+    """
+    try:
+        scheduler = get_scheduler()
+        job_id = f"auto_cancel_reminder_{reminder_data.release_id}_{reminder_data.request_id}"
+
+        job = scheduler.get_job(job_id)
+        if job:
+            scheduler.remove_job(job_id)
+            logging.debug(f"Cancelled scheduled job: {job_id}")
+            return True
+        return False
+
+    except Exception as e:
+        await log(log_message=f"Error cancelling scheduled job: {e}")
+        return False
+
+
 async def cancel_scheduled_cancellation(confirmation_data):
     """
         Отменяет запланированную автоматическую отмену места
@@ -35,26 +55,6 @@ async def cancel_scheduled_cancellation(confirmation_data):
                 log_type=LogType.DEBUG,
                 log_message=f"Cancelling scheduled job: {job_id}",
             )
-            return True
-        return False
-
-    except Exception as e:
-        await log(log_message=f"Error cancelling scheduled job: {e}")
-        return False
-
-
-async def cancel_scheduled_cancellation_by_reminder(reminder_data: ParkingReminder):
-    """
-        Отменяет запланированную автоматическую отмену места
-    """
-    try:
-        scheduler = get_scheduler()
-        job_id = f"auto_cancel_reminder_{reminder_data.release_id}_{reminder_data.request_id}"
-
-        job = scheduler.get_job(job_id)
-        if job:
-            scheduler.remove_job(job_id)
-            logging.debug(f"Cancelled scheduled job: {job_id}")
             return True
         return False
 

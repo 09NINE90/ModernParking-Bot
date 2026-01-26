@@ -1,6 +1,7 @@
 from aiogram import types
 
 from app.bot.keyboards import back_to_main_markup
+from app.bot.utils import get_user_full_mention
 from app.config import settings
 from app.data import get_db_connection
 from app.logs.log_builder import log, LogType
@@ -13,6 +14,7 @@ async def help_command(message: types.Message):
         return
 
     user = message.from_user
+    user_name = await get_user_full_mention(user.id)
 
     has_access = await UserService.is_user_in_chat(
         user.id,
@@ -26,7 +28,7 @@ async def help_command(message: types.Message):
         )
         await message.answer(
             "😔 Вам нельзя пользоваться этим ботом, "
-            "так как вы не состоите в чате парковки офиса."
+            "так как Вы не состоите в чате парковки офиса."
         )
         return
 
@@ -72,7 +74,7 @@ async def help_command(message: types.Message):
                     "• Если место кому-то досталось, Вам придет уведомление об этом\n\n"
 
                     "🚗 <b>Запросить место</b>\n"
-                    "• Выберите дату, когда вам нужно место\n"
+                    "• Выберите дату, когда Вам нужно место\n"
                     "• Система найдет подходящий вариант, если на эту дату есть свободное место\n"
                     "• Если место нашлось, Вам придет уведомление об этом\n\n"
 
@@ -93,6 +95,10 @@ async def help_command(message: types.Message):
                     "4. Следите за статистикой для планирования поездок"
                 ),
                 reply_markup=back_to_main_markup
+            )
+            await log(
+                log_type=LogType.DEBUG,
+                log_message=f"Вызвана команда /help:\n{user.id} ({user_name})"
             )
         else:
             await log(log_message=f"Ошибка регистрации пользователя: {user.id}")

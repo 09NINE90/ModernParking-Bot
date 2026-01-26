@@ -1,8 +1,11 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from app.utils.check_confirmation_status_util import expire_waiting_confirmations
 from app.utils.daily_statistics_util import get_daily_statistics
 from app.utils.distribute_weekly_schedules_util import distribute_weekly_schedules
+from app.utils.send_new_year_congratulation import send_new_year_congratulation
+from app.utils.send_quarter_report_util import send_quarter_report
 from app.utils.spot_reminder_util import spot_reminder
 from app.utils.update_statuses_util import update_statuses
 from app.utils.weekly_statistics_util import get_weekly_statistics
@@ -35,12 +38,12 @@ def setup_scheduler() -> AsyncIOScheduler:
         id='daily_evening_statistics'
     )
 
-    # Еженедельно в пятницу в 18:30
+    # Еженедельно в пятницу в 18:00
     scheduler.add_job(
         get_weekly_statistics,
         trigger=CronTrigger(
             hour=18,
-            minute=30,
+            minute=00,
             day_of_week='fri'
         ),
         id='weekly_statistics'
@@ -54,6 +57,16 @@ def setup_scheduler() -> AsyncIOScheduler:
             minute=00
         ),
         id='daily_user_reminder'
+    )
+
+    # Ежедневно в 18:00
+    scheduler.add_job(
+        expire_waiting_confirmations,
+        trigger=CronTrigger(
+            hour=18,
+            minute=00
+        ),
+        id='daily_check_confirmation_status'
     )
 
     # Ежедневно в 00:05
@@ -75,6 +88,30 @@ def setup_scheduler() -> AsyncIOScheduler:
             day_of_week='sun'
         ),
         id='distribute_weekly_parking_schedules'
+    )
+
+    # 30 декабря в 18:00
+    scheduler.add_job(
+        send_quarter_report,
+        trigger=CronTrigger(
+            month='dec',
+            day=30,
+            hour=18,
+            minute=00,
+        ),
+        id='send_quarter_report'
+    )
+
+    # 1 января в 00:00
+    scheduler.add_job(
+        send_new_year_congratulation,
+        trigger=CronTrigger(
+            month='jan',
+            day=1,
+            hour=00,
+            minute=00,
+        ),
+        id='send_new_year_congratulation'
     )
 
     return scheduler

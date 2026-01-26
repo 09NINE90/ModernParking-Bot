@@ -1,5 +1,8 @@
 from contextlib import contextmanager
 from datetime import date
+from typing import Optional, Dict, Any
+
+from psycopg2.extras import RealDictCursor
 
 from app.config import settings
 from app.logs.log_builder import log_sync
@@ -152,7 +155,7 @@ class StatisticsRepository:
                                 release_stats AS (
                                     SELECT 
                                         COUNT(*) as total,
-                                        COUNT(*) FILTER (WHERE status = 'ACCEPTED') as accepted,
+                                        COUNT(*) FILTER (WHERE status = 'ACCEPTED') as accepted
                                     FROM {settings.DB_SCHEMA}.parking_releases
                                     WHERE release_date BETWEEN %s AND %s
                                 )
@@ -241,5 +244,23 @@ class StatisticsRepository:
         except Exception as e:
             log_sync(
                 log_message=f"Ошибка получения полной статистики по запросам и освобождениям: {e}"
+            )
+            return None
+
+    def get_parking_stats_by_period(self, period_type: str = "week", period_count: int = 1) -> Optional[Dict[str, Any]]:
+        try:
+            with self._get_cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    f"""
+                    SELECT * FROM {settings.DB_SCHEMA}.get_parking_stats_by_period(%s, %s)
+                    ORDER BY period_start DESC
+                    LIMIT %s;
+                    """,
+                    (period_type, period_count, period_count),
+                )
+                return cur.fetchall()
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка статистики по периодам: {e}"
             )
             return None

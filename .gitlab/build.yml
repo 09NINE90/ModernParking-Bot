@@ -1,0 +1,56 @@
+build:
+  image: docker:20.10.16
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "clean" || $CI_COMMIT_BRANCH == "dev"'
+      changes:
+        paths:
+          - app/**/*
+      when: on_success
+    - when: manual
+
+  services:
+    - name: docker:20.10.16-dind
+      alias: docker
+      command: ["--insecure-registry=$REGISTRY"]
+  before_script:
+    - docker info
+    - echo "$REGISTRY_TOKEN" | docker login --username "$REGISTRY_USER_LOGIN" --password-stdin
+    - apk add --no-cache curl bash jq
+    - VERSION=$(jq -r '.current_version' version.json)
+    - export WORK_TAG="$VERSION-$(date +%Y%m%d-%H_%M)"
+  script:
+    - |
+      docker build \
+        --tag $REGISTRY/$REGISTRY_PROJECT_NAME:latest \
+        --tag $REGISTRY/$REGISTRY_PROJECT_NAME:$WORK_TAG \
+        .
+    - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:latest
+    - docker push $REGISTRY/$REGISTRY_PROJECT_NAME:$WORK_TAG
+    - curl --header "PRIVATE-TOKEN:$PAT" --data "tag_name=$WORK_TAG" --data "ref=$CI_COMMIT_SHA" "$CI_SERVER_URL/api/v4/projects/$CI_PROJECT_ID/repository/tags"
+    - echo "WORK_TAG=$WORK_TAG" > build.env
+
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "success" ]; then
+        curl -s -X POST "https://api.telegram.org/bot${CI_BOT_TOKEN}/sendMessage" \
+          -d "chat_id=${CI_GROUP_ID}" \
+          -d "message_thread_id=${CI_GROUP_TOPIC_ID}" \
+          -d "parse_mode=HTML" \
+          -d "text=<b>✅ Build</b>%0A<b>Project:</b> $CI_PROJECT_NAME%0A<b>Branch:</b> $CI_COMMIT_BRANCH%0A<b>Tag:</b> <code>$WORK_TAG</code>%0A<b>Status:</b> SUCCESS%0A<b>Pipeline:</b> $CI_PIPELINE_URL" || true
+      else
+        curl -s -X POST "https://api.telegram.org/bot${CI_BOT_TOKEN}/sendMessage" \
+          -d "chat_id=${CI_GROUP_ID}" \
+          -d "message_thread_id=${CI_GROUP_TOPIC_ID}" \
+          -d "parse_mode=HTML" \
+          -d "text=<b>❌ Build</b>%0A<b>Project:</b> $CI_PROJECT_NAME%0A<b>Branch:</b> $CI_COMMIT_BRANCH%0A<b>Status:</b> FAILED%0A<b>Error:</b> Docker build failed%0A<b>Pipeline:</b> $CI_PIPELINE_URL" || true
+      fi
+
+  artifacts:
+    reports:
+      dotenv: build.env
+
+  tags:
+    - docker
+  when: manual
+  allow_failure: false

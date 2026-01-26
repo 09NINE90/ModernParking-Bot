@@ -144,7 +144,7 @@ class UserRepository:
             log_sync(log_message=f"Ошибка обновления рейтинга пользователя {tg_id}: {e}")
             return False
 
-    def update_user_rating_by_user_id(self, db_user_id, delta: int) -> bool:
+    def update_user_rating_by_user_id(self, db_user_id, delta: int, user_name: str = '') -> bool:
         """Обновляет рейтинг пользователя"""
         try:
             with self._get_cursor() as cur:
@@ -161,7 +161,7 @@ class UserRepository:
                 if result:
                     log_sync(
                         log_type=LogType.INFO,
-                        log_message=f"Рейтинг пользователя {db_user_id} изменен на {delta} "
+                        log_message=f"Рейтинг пользователя {user_name} изменен на {delta} "
                                     f"и равен {result[0]}"
                     )
                     return True

@@ -11,6 +11,8 @@ async def notify_user(tg_user_id: int, message_text, notification_type: Notifica
         markup = found_spot_markup
     elif notification_type == NotificationTypes.SPOT_REMINDER:
         markup = reminder_spot_confirmation_markup
+    elif notification_type == NotificationTypes.WITHOUT_MARKUP:
+        markup = None
 
     try:
         from app.bot import bot

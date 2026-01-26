@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 
 from app.config import settings
+from app.data.models import ConfirmationStatus
 from app.logs.log_builder import log_sync
 
 
@@ -30,8 +31,8 @@ class SpotConfirmationRepository:
         try:
             with self._get_cursor() as cur:
                 cur.execute(f"""
-                        INSERT INTO {settings.DB_SCHEMA}.spot_confirmations (user_id, release_id, request_id)
-                        VALUES (%s, %s, %s)
+                        INSERT INTO {settings.DB_SCHEMA}.spot_confirmations (id, user_id, release_id, request_id)
+                        VALUES (gen_random_uuid(), %s, %s, %s)
                         RETURNING id
                         """, (user_id, release_id, request_id,))
 
@@ -48,25 +49,33 @@ class SpotConfirmationRepository:
 
     def find_spot_confirmations_by_user(self, user_id):
         """
-            Находит активное подтверждение парковочного места для пользователя.
+            Находит последнее подтверждение парковочного места для пользователя
+            в статусе WAITING (ожидает ответа).
         """
         try:
             with self._get_cursor() as cur:
                 cur.execute(f"""
-                                SELECT u.user_id, u.tg_id, prl.spot_id, prl.release_date, sc.release_id, sc.request_id
-                                FROM {settings.DB_SCHEMA}.spot_confirmations sc
-                                         JOIN {settings.DB_SCHEMA}.users u ON u.user_id = sc.user_id
-                                         JOIN {settings.DB_SCHEMA}.parking_releases prl ON prl.id = sc.release_id
-                                WHERE sc.user_id = %s
-                                  AND sc.is_active = TRUE
-                                ORDER BY sc.created_at DESC
-                                LIMIT 1
-                                """, (user_id,))
+                    SELECT sc.id,                 
+                           u.user_id,
+                           u.tg_id,
+                           prl.spot_id,
+                           prl.release_date,
+                           sc.release_id,
+                           sc.request_id,
+                           sc.message_sent_id
+                    FROM {settings.DB_SCHEMA}.spot_confirmations sc
+                    JOIN {settings.DB_SCHEMA}.users u ON u.user_id = sc.user_id
+                    JOIN {settings.DB_SCHEMA}.parking_releases prl ON prl.id = sc.release_id
+                    WHERE sc.user_id = %s
+                      AND sc.status = 'WAITING'
+                    ORDER BY sc.created_at DESC
+                    LIMIT 1
+                """, (user_id,))
 
                 return cur.fetchone()
         except Exception as e:
             log_sync(
-                log_message=f"Ошибка получения активных подтверждений пользователя: {e}"
+                log_message=f"Ошибка получения ожидающего подтверждения пользователя: {e}"
             )
             return None
 
@@ -91,7 +100,30 @@ class SpotConfirmationRepository:
             )
             return None
 
+    def deactivate_spot_confirmations_by_release(self, release_id: int):
+        """
+            Деактивирует все активные подтверждения по конкретному релизу (месту).
+            Вызывается, когда кто-то уже занял это место.
+        """
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(f"""
+                    UPDATE {settings.DB_SCHEMA}.spot_confirmations
+                    SET is_active  = FALSE,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE release_id = %s
+                      AND is_active = TRUE
+                """, (release_id,))
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка деактивации подтверждений по релизу: {e}"
+            )
+            return None
+
     def set_message_sent_id(self, spot_confirmation_id, message_sent_id):
+        """
+           Сохраняет ID отправленного Telegram-сообщения для указанного подтверждения.
+       """
         try:
             with self._get_cursor() as cur:
                 cur.execute(f"""
@@ -106,17 +138,15 @@ class SpotConfirmationRepository:
             )
             return None
 
-    def get_message_sent_id(self, user_id, release_id, request_id):
+    def get_message_sent_id(self, confirmation_id):
         try:
             with self._get_cursor() as cur:
                 cur.execute(f"""
                                 SELECT message_sent_id 
                                 FROM {settings.DB_SCHEMA}.spot_confirmations 
-                                WHERE user_id = %s 
-                                    AND release_id = %s 
-                                    AND request_id = %s
+                                WHERE id = %s
                                 """,
-                            (user_id, release_id, request_id,))
+                            (confirmation_id,))
 
                 result = cur.fetchone()
 
@@ -125,6 +155,116 @@ class SpotConfirmationRepository:
                 return None
         except Exception as e:
             log_sync(
-                log_message=f"Ошибка получения ID сообщения для подтверждения user_id: {user_id}, request_id: {request_id}: {e}"
+                log_message=f"Ошибка получения ID сообщения для подтверждения confirmation_id: {confirmation_id}: {e}"
             )
             return None
+
+    def set_status(self, spot_confirmation_id, status: ConfirmationStatus):
+        """
+            Изменение статуса подтверждения по ID
+        """
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(f"""
+                            UPDATE {settings.DB_SCHEMA}.spot_confirmations
+                            SET status  = %s,
+                                updated_at = CURRENT_TIMESTAMP
+                            WHERE id = %s
+                        """, (status.name, spot_confirmation_id,))
+
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка обновления статуса подтверждения на {status.name}: {e}"
+            )
+            return None
+
+    def get_waiting_confirmations_by_release_except_user(self, release_id, user_id):
+        """
+            Возвращает все подтверждения со статусом WAITING
+            для указанного релиза, кроме подтверждения текущего пользователя.
+        """
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(f"""
+                    SELECT sc.id,
+                           sc.user_id,
+                           sc.request_id,
+                           sc.message_sent_id,
+                           u.tg_id
+                    FROM {settings.DB_SCHEMA}.spot_confirmations sc
+                    JOIN {settings.DB_SCHEMA}.users u ON sc.user_id = u.user_id
+                    WHERE sc.release_id = %s
+                      AND sc.status = 'WAITING'
+                      AND sc.user_id <> %s
+                """, (release_id, user_id))
+
+                return cur.fetchall()
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка получения подтверждений по релизу (исключая пользователя): {e}"
+            )
+            return []
+
+    def has_waiting_confirmations_for_release(self, release_id) -> bool:
+        """
+            Проверяет, остались ли подтверждения со статусом WAITING для указанного релиза.
+        """
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(f"""
+                    SELECT COUNT(*)
+                    FROM {settings.DB_SCHEMA}.spot_confirmations
+                    WHERE release_id = %s
+                      AND status = 'WAITING'
+                """, (release_id,))
+                count, = cur.fetchone()
+                return count > 0
+        except Exception as e:
+            log_sync(log_message=f"Ошибка проверки WAITING-подтверждений по релизу: {e}")
+            return False
+
+    def get_all_waiting_confirmations_with_user(self):
+        """
+            Возвращает все подтверждения со статусом WAITING вместе с данными пользователей
+            для массовой обработки истечения времени ожидания.
+        """
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(f"""
+                            SELECT sc.id,
+                                   sc.user_id,
+                                   sc.request_id,
+                                   sc.release_id,
+                                   sc.message_sent_id,
+                                   u.tg_id
+                            FROM {settings.DB_SCHEMA}.spot_confirmations sc
+                                JOIN {settings.DB_SCHEMA}.parking_requests pr ON pr.id = sc.request_id
+                                JOIN {settings.DB_SCHEMA}.parking_releases prl ON prl.id = sc.release_id
+                                JOIN {settings.DB_SCHEMA}.users u ON u.user_id = sc.user_id
+                            WHERE sc.status = 'WAITING';
+                            """)
+
+                return cur.fetchall()
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка получения ожидающих подтверждений: {e}"
+            )
+            return []
+
+    def bulk_cancel_all_waiting(self):
+        """
+            Массово переводит все подтверждения со статусом WAITING в CANCELLED.
+            Вызывается при истечении времени ожидания (ежедневно в 18:00).
+        """
+        try:
+            with self._get_cursor() as cur:
+                cur.execute(f"""
+                            UPDATE {settings.DB_SCHEMA}.spot_confirmations
+                            SET status = 'CANCELLED',
+                                updated_at = CURRENT_TIMESTAMP
+                            WHERE status = 'WAITING';
+                            """)
+        except Exception as e:
+            log_sync(
+                log_message=f"Ошибка обновления статусов ожидающих подтверждений на отмененные: {e}"
+            )

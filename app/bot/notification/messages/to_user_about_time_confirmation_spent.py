@@ -11,7 +11,7 @@ async def to_user_about_time_confirmation_spent(spot_confirmation_data: SpotConf
         f"<b>Место:</b> №{spot_confirmation_data.spot_number} на "
         f"{spot_confirmation_data.assignment_date.strftime('%d.%m.%Y')} "
         f"было освобождено для других пользователей.\n\n"
-        f"️️⚠️ <i>Я больше не буду предлагать вам места на эту дату</i>"
+        f"️️ℹ️️ <i>Если освободится еще одно место на сегодня, я Вам его предложу</i>"
     )
 
     return message_text

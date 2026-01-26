@@ -40,3 +40,10 @@ class CallbackData:
     # Админ
     MAIN_ADMIN = "main_admin"
     ALL_STATISTICS = "all_statistics"
+    CLEAR_TABLES = "clear_tables"
+    YES_CLEAR_TABLES = "yes_clear_tables"
+    POSTFIX_STATS = "_stats"
+    WEEK_STATS = "week_stats"
+    MONTH_STATS = "month_stats"
+    QUARTER_STATS = "quarter_stats"
+    YEAR_STATS = "year_stats"

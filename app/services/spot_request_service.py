@@ -43,6 +43,9 @@ class SpotRequestService:
     def get_spot_candidates(self, rq_date, limit: int):
         return self.repository.get_spot_candidates(rq_date, limit)
 
+    def get_all_spot_candidates(self, rq_date: date):
+        return self.repository.get_all_spot_candidates(rq_date)
+
     def get_request_status_by_id(self, request_id):
         return self.repository.get_request_status_by_id(request_id)
 
@@ -88,3 +91,9 @@ class SpotRequestService:
 
     def update_requests_statuses_to_not_found_by_date(self, rq_date: date):
         return self.repository.update_requests_statuses_to_not_found_by_date(rq_date)
+
+    def update_requests_statuses_to_canceled_by_date(self, rq_date: date):
+        return self.repository.update_requests_statuses_to_canceled_by_date(rq_date)
+
+    def bulk_cancel_requests_by_confirmations(self, confirmations):
+        return self.repository.bulk_cancel_requests_by_confirmations(confirmations)

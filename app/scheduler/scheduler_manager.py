@@ -2,12 +2,12 @@ from datetime import datetime, timedelta
 
 from apscheduler.triggers.date import DateTrigger
 
-from app.data.models import SpotConfirmationDTO, ParkingReminder
+from app.data.models import ParkingReminder, SpotConfirmationDTO
 from app.logs.log_builder import log, LogType
 from app.scheduler.schedule_utils import get_scheduler
 from app.utils.auto_cancel_distribution import auto_cancel_distribution
 from app.utils.auto_cancel_reminder_util import auto_cancel_reminder
-from app.utils.auto_cancel_spot_util import auto_cancel_spot
+from app.utils.auto_cancel_spot import auto_cancel_spot
 
 
 async def schedule_spot_cancellation(confirmation_data: SpotConfirmationDTO, delay_minutes: int = 15):
@@ -35,7 +35,6 @@ async def schedule_spot_cancellation(confirmation_data: SpotConfirmationDTO, del
     )
     return run_time
 
-
 async def schedule_reminder_cancellation(reminder_data: ParkingReminder, delay_hours=6):
     """
         Планирует автоматическую отмену места через указанное время
@@ -61,6 +60,7 @@ async def schedule_reminder_cancellation(reminder_data: ParkingReminder, delay_h
         is_sending_log=False
     )
     return run_time
+
 
 async def schedule_distribute_weekly_parking_schedules(tg_id, message_id, delay_hours=12):
     scheduler = get_scheduler()

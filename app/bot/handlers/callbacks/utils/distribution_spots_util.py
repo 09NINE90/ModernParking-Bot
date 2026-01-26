@@ -20,7 +20,8 @@ async def distribute_parking_spots():
     )
     today_date = datetime.today().date()
     datetime_now = datetime.now()
-    today_9am = datetime_now.replace(hour=9, minute=0, second=0, microsecond=0)
+    today_8_30 = datetime_now.replace(hour=8, minute=30, second=0, microsecond=0)
+    today_17_30 = datetime_now.replace(hour=17, minute=30, second=0, microsecond=0)
     try:
         with get_db_connection() as conn:
             distributed_count = 0
@@ -85,7 +86,30 @@ async def distribute_parking_spots():
                         )
                         continue
 
-                    if (distribution_date == today_date) and (datetime_now > today_9am):
+                    if (distribution_date == today_date) and (datetime_now > today_17_30):
+                        spot_release_service.update_parking_releases(
+                            user_id=user_id,
+                            release_id=release_id,
+                            current_status=ParkingReleaseStatus.CANCELED
+                        )
+                        spot_request_service.update_parking_request_status(
+                            request_id=request_id,
+                            current_status=ParkingRequestStatus.CANCELED
+                        )
+
+                        request_status = spot_request_service.get_request_status_by_id(request_id)
+                        release_status = spot_release_service.get_release_status_by_id(release_id)
+
+                        await log(
+                            log_type=LogType.INFO,
+                            log_message=(
+                                f"Запросы отменены по истечению времени\n"
+                                f"Место №{spot_id} никто не занял\n"
+                                f"release_status = {release_status}\n"
+                                f"request_status = {request_status}"
+                            )
+                        )
+                    elif (distribution_date == today_date) and (datetime_now > today_8_30):
                         spot_release_service.update_parking_releases(
                             user_id=user_id,
                             release_id=release_id,
@@ -108,6 +132,8 @@ async def distribute_parking_spots():
                         spot_confirmation_id = spot_confirmation_service.create_spot_confirmation(
                             spot_confirmation_data)
 
+                        spot_confirmation_data.confirmation_id = str(spot_confirmation_id)
+
                         message_text = await to_user_about_found_spot(spot_confirmation_data)
                         message_id = await notify_user(tg_id, message_text, NotificationTypes.SPOT_FOUND)
 
@@ -125,7 +151,6 @@ async def distribute_parking_spots():
                             )
                         )
                         waiting_count += 1
-
                     else:
                         release_owner = spot_release_service.get_release_owner(release_id)
 
@@ -146,7 +171,11 @@ async def distribute_parking_spots():
                             request_id=request_id,
                             current_status=ParkingRequestStatus.ACCEPTED
                         )
-                        user_service.update_user_rating_by_user_id(user_id, 1)
+                        user_service.update_user_rating_by_user_id(
+                            db_user_id=user_id,
+                            delta=1,
+                            user_name=user_name
+                        )
 
                         message_text = await to_user_about_assigned_spot(tg_id, spot_id, distribution_date)
                         await notify_user(tg_id, message_text)

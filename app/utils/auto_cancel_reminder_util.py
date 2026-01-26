@@ -17,6 +17,7 @@ async def auto_cancel_reminder(reminder_data: ParkingReminder):
         release_id = reminder_data.release_id
         db_user_id = reminder_data.db_user_id
         tg_user_id = reminder_data.user_tg_id
+        user_name = await get_user_full_mention(tg_user_id, False)
 
         with get_db_connection() as conn:
             user_service = ServiceFactory.create_user_service(conn)
@@ -43,7 +44,8 @@ async def auto_cancel_reminder(reminder_data: ParkingReminder):
             )
             user_service.update_user_rating_by_user_id(
                 db_user_id=db_user_id,
-                delta=-1
+                delta=-1,
+                user_name=user_name
             )
 
             conn.commit()

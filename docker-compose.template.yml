@@ -1,0 +1,14 @@
+networks:
+  network:
+    external:
+      name: network
+
+services:
+  ${CONTAINER_NAME}:
+    container_name: ${CONTAINER_NAME}
+    image: ${REGISTRY}/${REGISTRY_PROJECT_NAME}:${WORK_TAG}
+    restart: always
+    networks:
+      - network
+    env_file:
+      - .env

@@ -7,7 +7,7 @@ from app.bot.notification.messages import to_owner_message
 from app.bot.notification.notify_user import notify_user
 from app.bot.utils import get_user_full_mention
 from app.data import get_db_connection
-from app.data.models import SpotConfirmationDTO, ParkingReleaseStatus, ParkingRequestStatus
+from app.data.models import SpotConfirmationDTO, ParkingRequestStatus, ConfirmationStatus, ParkingReleaseStatus
 from app.logs.log_builder import log, LogType
 from app.scheduler.schedule_utils import cancel_scheduled_cancellation
 from app.services import ServiceFactory
@@ -19,6 +19,7 @@ async def take_spot(callback: CallbackQuery):
         Подтверждает занятие парковочного места пользователем.
     """
     tg_user_id = callback.from_user.id
+    user_name = await get_user_full_mention(tg_user_id, False)
 
     with get_db_connection() as conn:
 
@@ -33,9 +34,21 @@ async def take_spot(callback: CallbackQuery):
 
         result = spot_confirmation_service.get_spot_confirmation(db_user_id)
         if not result:
+            await callback.message.edit_text(
+                text="⚠️ Это место уже недоступно.",
+                reply_markup=back_to_main_markup
+            )
+            await log(
+                log_type=LogType.WARN,
+                log_message="Пользователь не смог принять предложенное место.\n"
+                            f"db_user_id = {db_user_id}\n"
+                            f"user_name = {user_name}"
+            )
             return None
 
         spot_confirmation_data = get_spot_confirmation_data_from_result(result)
+
+        await cancel_scheduled_cancellation(spot_confirmation_data)
 
         spot_release_service.update_parking_releases(
             user_id=db_user_id,
@@ -47,9 +60,16 @@ async def take_spot(callback: CallbackQuery):
             current_status=ParkingRequestStatus.ACCEPTED
         )
 
-        await cancel_scheduled_cancellation(spot_confirmation_data)
-        spot_confirmation_service.deactivate_spot_confirmations_by_user(db_user_id)
-        user_service.update_user_rating_by_user_id(db_user_id, 1)
+        spot_confirmation_service.set_status(
+            spot_confirmation_id=spot_confirmation_data.confirmation_id,
+            status=ConfirmationStatus.ACCEPTED
+        )
+
+        user_service.update_user_rating_by_user_id(
+            db_user_id=db_user_id,
+            delta=1,
+            user_name=user_name
+        )
 
         await notify_release_owner(spot_release_service, spot_confirmation_data)
 
@@ -57,8 +77,6 @@ async def take_spot(callback: CallbackQuery):
         release_status = spot_release_service.get_release_status_by_id(spot_confirmation_data.release_id)
 
         conn.commit()
-
-        user_name = await get_user_full_mention(tg_user_id, False)
 
         await callback.message.edit_text(
             text=(
@@ -83,13 +101,20 @@ async def take_spot(callback: CallbackQuery):
 
 
 def get_spot_confirmation_data_from_result(result):
-    return SpotConfirmationDTO(db_user_id=result[0],
-                               tg_user_id=result[1],
-                               spot_number=result[2],
-                               assignment_date=result[3],
-                               release_id=result[4],
-                               request_id=result[5])
+    dto = SpotConfirmationDTO(
+        db_user_id=result[1],
+        tg_user_id=result[2],
+        spot_number=result[3],
+        assignment_date=result[4],
+        release_id=result[5],
+        request_id=result[6],
+        message_sent_id=result[7],
+    )
 
+    if result[0]:
+        dto.confirmation_id = result[0]
+
+    return dto
 
 async def notify_release_owner(spot_release_service, spot_confirmation_data):
     release_owner = spot_release_service.get_release_owner(

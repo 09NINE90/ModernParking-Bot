@@ -27,7 +27,7 @@ async def start_command(message: types.Message):
         )
         await message.answer(
             "😔 Вам нельзя пользоваться этим ботом, "
-            "так как вы не состоите в чате парковки офиса."
+            "так как Вы не состоите в чате парковки офиса."
         )
         return
 
