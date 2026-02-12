@@ -7,6 +7,7 @@ from app.data import get_db_connection
 from app.logs.log_builder import log, LogType
 from app.services import ServiceFactory
 from app.services.user_service import UserService
+from app.utils.emoji_util import statistics_emoji
 
 
 async def help_command(message: types.Message):
@@ -61,7 +62,7 @@ async def help_command(message: types.Message):
                     "🎮 <b>Управление ботом:</b>\n"
                     "Все действия выполняются через кнопки главного меню:\n\n"
 
-                    "📊 <b>Моя статистика</b>\n"
+                    f"{statistics_emoji} <b>Моя статистика</b>\n"
                     "• Просмотр вашей активности\n"
                     "• История бронирований\n"
                     "• Статистика использования\n\n"

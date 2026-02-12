@@ -27,7 +27,11 @@ main_admin_markup = create_main_admin_markup()
 
 def back_to_main_admin_markup() -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton(text="🔙 Назад", callback_data=CallbackData.MAIN_ADMIN)],
+        [InlineKeyboardButton(
+            text="Назад",
+            callback_data=CallbackData.MAIN_ADMIN,
+            icon_custom_emoji_id="5258236805890710909"
+        )],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
@@ -37,8 +41,8 @@ back_to_main_admin = back_to_main_admin_markup()
 
 def confirm_clear_tables_markup() -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton(text="Да, очистить", callback_data=CallbackData.YES_CLEAR_TABLES)],
-        [InlineKeyboardButton(text="Отмена", callback_data=CallbackData.MAIN_ADMIN)]
+        [InlineKeyboardButton(text="Да, очистить", callback_data=CallbackData.YES_CLEAR_TABLES, style="success")],
+        [InlineKeyboardButton(text="Отмена", callback_data=CallbackData.MAIN_ADMIN, style="danger")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
@@ -55,13 +59,21 @@ def create_stats_period_markup(period_name: str, period_displays: list[str]) -> 
             callback_data=f"{period_name}_{period_display}",
         )
 
-    builder.button(text="🔙 Назад", callback_data=CallbackData.MAIN_ADMIN)
+    builder.button(
+        text="Назад",
+        callback_data=CallbackData.MAIN_ADMIN,
+        icon_custom_emoji_id="5258236805890710909"
+    )
     builder.adjust(1)
     return builder.as_markup()
 
 
 def back_to_stats_period_markup(period_name: str) -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton(text="🔙 Назад", callback_data=f"{period_name}{CallbackData.POSTFIX_STATS}")],
+        [InlineKeyboardButton(
+            text="Назад",
+            callback_data=f"{period_name}{CallbackData.POSTFIX_STATS}",
+            icon_custom_emoji_id="5258236805890710909"
+        )],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

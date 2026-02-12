@@ -12,6 +12,7 @@ from app.logs.log_builder import log, LogType
 from app.scheduler.schedule_utils import cancel_scheduled_cancellation
 from app.services import ServiceFactory
 from app.utils.daily_statistics_util import update_daily_statistics_by_date
+from app.utils.emoji_util import warn_emoji, sber_emoji
 
 
 async def take_spot(callback: CallbackQuery):
@@ -35,7 +36,7 @@ async def take_spot(callback: CallbackQuery):
         result = spot_confirmation_service.get_spot_confirmation(db_user_id)
         if not result:
             await callback.message.edit_text(
-                text="⚠️ Это место уже недоступно.",
+                text=f"{warn_emoji} Это место уже недоступно.",
                 reply_markup=back_to_main_markup
             )
             await log(
@@ -80,7 +81,7 @@ async def take_spot(callback: CallbackQuery):
 
         await callback.message.edit_text(
             text=(
-                f"✅ Вы успешно заняли место №{spot_confirmation_data.spot_number} "
+                f"{sber_emoji} Вы успешно заняли место №{spot_confirmation_data.spot_number} "
                 f"на {spot_confirmation_data.assignment_date.strftime('%d.%m.%Y')}"
             ),
             reply_markup=back_to_main_markup

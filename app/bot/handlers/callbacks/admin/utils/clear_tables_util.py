@@ -4,6 +4,7 @@ from app.bot.keyboards import confirm_clear_tables_admin, back_to_main_admin
 from app.config import settings
 from app.data import get_db_connection
 from app.services import ServiceFactory
+from app.utils.emoji_util import warn_emoji
 
 
 async def clear_tables_request(callback: CallbackQuery):
@@ -15,13 +16,13 @@ async def clear_tables_request(callback: CallbackQuery):
         is_admin = user_service.is_user_admin(tg_user_id)
         if not is_admin:
             await callback.message.edit_text(
-                text=f"⚠️ Вы не админ!",
+                text=f"{warn_emoji} Вы не админ!",
             )
             return None
 
     current_db_schema = settings.DB_SCHEMA
     await callback.message.edit_text(
-        text=f"⚠️ Вы уверены, что хотите почистить "
+        text=f"{warn_emoji} Вы уверены, что хотите почистить "
              f"таблицы в схеме: <b>{current_db_schema}</b>?",
         reply_markup=confirm_clear_tables_admin
     )
@@ -39,7 +40,7 @@ async def confirm_clear_tables(callback: CallbackQuery):
         is_admin = user_service.is_user_admin(tg_user_id)
         if not is_admin:
             await callback.message.edit_text(
-                text=f"⚠️ Вы не админ!",
+                text=f"{warn_emoji} Вы не админ!",
             )
             return None
 
@@ -48,7 +49,7 @@ async def confirm_clear_tables(callback: CallbackQuery):
         conn.commit()
 
     if not result:
-        message_text = "⚠️ Ошибка при очистке таблиц. Подробности в логах."
+        message_text = f"{warn_emoji} Ошибка при очистке таблиц. Подробности в логах."
     else:
         message_text = (
             "<b>Удалено строк:</b>\n\n"

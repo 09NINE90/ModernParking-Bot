@@ -8,7 +8,7 @@ from app.bot.utils import get_user_full_mention
 from app.config import settings
 from app.data import get_db_connection
 from app.services import ServiceFactory
-from app.utils.emoji_util import get_random_car_emoji
+from app.utils.emoji_util import get_random_car_emoji, statistics_emoji, eyes_emoji
 
 
 async def get_weekly_statistics():
@@ -43,7 +43,7 @@ async def get_weekly_statistics():
                 spot = transfer.spot_id
                 message_text += f"{emoji} {owner} отдал место <b>№{spot}</b> -> {recipient}\n\n"
         else:
-            message_text += "👀Трансферов мест пока не было..."
+            message_text += f"{eyes_emoji}Трансферов мест пока не было..."
 
         await send_and_pin_message_in_chat(
             tg_chat_id=settings.GROUP_ID,
@@ -62,8 +62,8 @@ async def get_weekly_statistics():
 
 def get_start_message_text(start_date: date, end_date: date, statistics_data):
     message_text = (
-        f"👋<b>Всем привет!</b>\n"
-        f"<b>📊 Статистика за текущую неделю</b> "
+        f"<b>Всем привет!</b>\n"
+        f"{statistics_emoji} <b>Статистика за текущую неделю</b> "
         f"<u>{start_date.strftime('%d.%m.%Y')}-{end_date.strftime('%d.%m.%Y')}</u>:\n\n"
         f"▫️Всего освобождено мест: <b>{statistics_data['total_releases']}</b>\n"
         f"▫️Всего запросов на места: <b>{statistics_data['total_requests']}</b>\n\n"

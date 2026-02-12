@@ -1,9 +1,10 @@
 from app.config import settings
+from app.utils.emoji_util import congratulation_emoji
 
 
 async def send_new_year_congratulation():
     message_text = (
-        "С Новым годом! 🎉\n\n"
+        f"С Новым годом! {congratulation_emoji}\n\n"
         "От лица бота распределения парковочных мест желаю вам в 2026 году "
         "всегда находить идеальное место без суеты, чтобы ваши поездки были "
         "такими же быстрыми и точными, как алгоритмы подбора слотов.\n\n"

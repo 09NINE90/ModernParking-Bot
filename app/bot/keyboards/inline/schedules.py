@@ -28,11 +28,16 @@ def create_default_schedule_markup(selected_days: list[str] = None) -> InlineKey
 
     if selected_days:
         builder.button(
-            text="💾 Сохранить",
-            callback_data=CallbackData.SAVE_SCHEDULE
+            text="Сохранить",
+            callback_data=CallbackData.SAVE_SCHEDULE,
+            icon_custom_emoji_id='5462956611033117422'
         )
 
-    builder.button(text="🔙 Назад", callback_data=CallbackData.BACK_TO_MAIN)
+    builder.button(
+        text="Назад",
+        callback_data=CallbackData.BACK_TO_MAIN,
+        icon_custom_emoji_id="5258236805890710909"
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -54,8 +59,9 @@ def create_delete_schedules_keyboard(schedules: list[ScheduleDto]) -> InlineKeyb
         )
 
     builder.button(
-        text="🔙 Назад",
-        callback_data=CallbackData.BACK_TO_MAIN
+        text="Назад",
+        callback_data=CallbackData.BACK_TO_MAIN,
+        icon_custom_emoji_id="5258236805890710909"
     )
 
     builder.adjust(1)
@@ -72,12 +78,14 @@ def confirmation_delete_schedule_markup(schedule_id: str) -> InlineKeyboardMarku
     builder = InlineKeyboardBuilder()
 
     builder.button(
-        text="✅ Да, удалить",
-        callback_data=f"{CallbackData.YES_DEL_PREFIX}{schedule_id}"
+        text="Да, удалить",
+        callback_data=f"{CallbackData.YES_DEL_PREFIX}{schedule_id}",
+        style="success"
     )
     builder.button(
-        text="❌ Отмена",
-        callback_data=CallbackData.DELETE_DEFAULT_SCHEDULE
+        text="Отмена",
+        callback_data=CallbackData.DELETE_DEFAULT_SCHEDULE,
+        style="danger"
     )
 
     builder.adjust(2)

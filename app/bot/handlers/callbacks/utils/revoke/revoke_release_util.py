@@ -10,6 +10,7 @@ from app.data import get_db_connection
 from app.data.models import RevokeRelease, ParkingReleaseStatus
 from app.logs.log_builder import log, LogType
 from app.services import ServiceFactory
+from app.utils.emoji_util import info_emoji, warn_emoji
 
 
 async def choose_release_for_revocation(callback: CallbackQuery):
@@ -62,20 +63,20 @@ async def confirmation_revoke_release(callback: CallbackQuery, release_id):
         )
         if release.status == ParkingReleaseStatus.ACCEPTED:
             await callback.message.edit_text(
-                text="⚠️ Место уже кому-то отдано",
+                text=f"{warn_emoji} Место уже кому-то отдано",
                 reply_markup=back_to_revoke_release_markup
             )
             return None
         elif release.status == ParkingReleaseStatus.WAITING:
             await callback.message.edit_text(
-                text="⚠️ Место уже кому-то предложили",
+                text=f"{warn_emoji} Место уже кому-то предложили",
                 reply_markup=back_to_revoke_release_markup
             )
             return None
 
         message_text = (f"Вы уверены, что хотите <b>отозвать место №{release.spot_id}</b> "
                         f"на дату <u>{release.release_date.strftime('%d.%m.%Y')}</u>?\n\n"
-                        f"⚠️ <i>Если место никто не занял, то оно успешно отзовется</i>")
+                        f"{warn_emoji} <i>Если место никто не занял, то оно успешно отзовется</i>")
 
         await callback.message.edit_text(
             text=message_text,
@@ -103,13 +104,13 @@ async def confirm_revoke_release(callback: CallbackQuery, release_id):
 
         if release.status == ParkingReleaseStatus.ACCEPTED:
             await callback.message.edit_text(
-                text="⚠️ Место уже кому-то отдано",
+                text=f"{warn_emoji} Место уже кому-то отдано",
                 reply_markup=back_to_revoke_release_markup
             )
             return None
         elif release.status == ParkingReleaseStatus.WAITING:
             await callback.message.edit_text(
-                text="⚠️ Место уже кому-то предложили",
+                text=f"{warn_emoji} Место уже кому-то предложили",
                 reply_markup=back_to_revoke_release_markup
             )
             return None
@@ -123,7 +124,7 @@ async def confirm_revoke_release(callback: CallbackQuery, release_id):
 
         message_text = (f"Вы успешно отозвали место <b>№{release.spot_id} </b>"
                         f"на дату <u>{release.release_date.strftime('%d.%m.%Y')}</u>\n\n"
-                        f"ℹ️ <i>Это больше не будет назначаться никому в эту дату</i>")
+                        f"{info_emoji} <i>Это больше не будет назначаться никому в эту дату</i>")
 
         user_name = await get_user_full_mention(tg_user_id, False)
         await log(

@@ -6,6 +6,7 @@ from app.bot.keyboards.inline import back_to_delete_default_schedule_markup
 from app.constants import get_week_days_for_day_numbers
 from app.data import get_db_connection
 from app.services import ServiceFactory
+from app.utils.emoji_util import trash_emoji, eyes_emoji
 
 
 async def delete_default_schedule(callback: CallbackQuery, state: FSMContext):
@@ -26,7 +27,7 @@ async def delete_default_schedule(callback: CallbackQuery, state: FSMContext):
         if result_list is not None:
             keyboard = create_delete_schedules_keyboard(result_list)
 
-            message_text = ("🗑️ <b>Удаление расписания</b>\n\n"
+            message_text = (f"{trash_emoji} <b>Удаление расписания</b>\n\n"
                             "Выберите расписание для удаления:")
 
             await callback.message.edit_text(
@@ -35,7 +36,7 @@ async def delete_default_schedule(callback: CallbackQuery, state: FSMContext):
             )
         else:
             await callback.message.edit_text(
-                text="👀 У Вас нет сохраненных расписаний для удаления.",
+                text=f"{eyes_emoji} У Вас нет сохраненных расписаний для удаления.",
                 reply_markup=back_to_main_markup
             )
 
@@ -51,7 +52,7 @@ async def confirmation_delete_schedule_by_id(callback: CallbackQuery, state: FSM
         if result is not None:
             week_days = get_week_days_for_day_numbers(result.day_numbers)
 
-            message_text = f"🗑️ Уверены, что хотите удалить расписание на: <b>{week_days}</b>?"
+            message_text = f"{trash_emoji} Уверены, что хотите удалить расписание на: <b>{week_days}</b>?"
 
             await callback.message.edit_text(
                 text=message_text,
@@ -70,7 +71,7 @@ async def delete_schedule_by_id(callback: CallbackQuery, state: FSMContext, sche
         )
 
         if is_delete:
-            message_text = "Расписание успешно удалено"
+            message_text = f"Расписание успешно удалено {trash_emoji}"
             await callback.message.edit_text(
                 text=message_text,
                 reply_markup=back_to_delete_default_schedule_markup

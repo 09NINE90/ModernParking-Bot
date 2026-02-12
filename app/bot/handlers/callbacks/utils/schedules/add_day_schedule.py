@@ -2,6 +2,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from app.bot.keyboards import create_default_schedule_markup
+from app.utils.emoji_util import back_emoji, save_emoji
 
 
 async def add_day_schedule(callback, state, day):
@@ -22,8 +23,8 @@ async def update_schedule_message(callback: CallbackQuery, state: FSMContext):
     if selected_days:
         days_text = ", ".join(selected_days)
         message_text = (f"Выбранные дни: <b>{days_text}</b>\n\nПродолжайте выбирать дни или:\n"
-                        f"• Нажмите <b>'🔙 Назад'</b> для отмены заполнения расписания.\n"
-                        f"• Нажмите <b>'💾 Сохранить'</b> для перехода к утверждению расписания")
+                        f"• Нажмите <b>'{back_emoji} Назад'</b> для отмены заполнения расписания.\n"
+                        f"• Нажмите <b>'{save_emoji} Сохранить'</b> для перехода к утверждению расписания")
     else:
         message_text = "Выберите дни недели:"
 

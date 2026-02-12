@@ -4,6 +4,7 @@ from app.bot.keyboards import back_to_main_admin, create_stats_period_markup, ba
 from app.data import get_db_connection
 from app.data.models import ParkingStatsPeriodDTO
 from app.services import ServiceFactory
+from app.utils.emoji_util import warn_emoji, statistics_emoji
 
 
 async def for_admin_statistics(callback: CallbackQuery):
@@ -16,7 +17,7 @@ async def for_admin_statistics(callback: CallbackQuery):
         is_admin = user_service.is_user_admin(tg_user_id)
         if not is_admin:
             await callback.message.edit_text(
-                text=f"⚠️ Вы не админ!",
+                text=f"{warn_emoji} Вы не админ!",
             )
             return None
 
@@ -32,7 +33,7 @@ async def for_admin_statistics(callback: CallbackQuery):
         release_stats = all_stats['releases']
 
         message_text = (
-            f"📊 <b>Статистика распределения парковочных мест за все время</b>\n\n"
+            f"{statistics_emoji} <b>Статистика распределения парковочных мест за все время</b>\n\n"
 
             f"<b>Освобождение мест:</b>\n"
             f"┌ Всего освобождено: <b>{release_stats['total']}</b>\n"
@@ -87,7 +88,7 @@ async def get_period_stats(callback: CallbackQuery, period_name: str):
         is_admin = user_service.is_user_admin(tg_user_id)
         if not is_admin:
             await callback.message.edit_text(
-                text=f"⚠️ Вы не админ!",
+                text=f"{warn_emoji} Вы не админ!",
             )
             return None
 
@@ -117,7 +118,7 @@ async def show_period_stats_details(callback: CallbackQuery, period_name: str, p
 
         is_admin = user_service.is_user_admin(tg_user_id)
         if not is_admin:
-            await callback.message.edit_text("⚠️ Вы не админ!")
+            await callback.message.edit_text(f"{warn_emoji} Вы не админ!")
             return
 
         match period_name:
@@ -130,7 +131,7 @@ async def show_period_stats_details(callback: CallbackQuery, period_name: str, p
             case "year":
                 period_count = 2
             case _:
-                await callback.message.edit_text("⚠️ Неверный тип периода")
+                await callback.message.edit_text(f"{warn_emoji} Неверный тип периода")
                 return
 
         stats: list[ParkingStatsPeriodDTO] = statistics_service.get_parking_stats_by_period(
@@ -140,7 +141,7 @@ async def show_period_stats_details(callback: CallbackQuery, period_name: str, p
 
     stat = next((s for s in stats if s.period_display == period_display), None)
     if not stat:
-        await callback.message.edit_text("⚠️ Статистика для выбранного периода не найдена")
+        await callback.message.edit_text(f"{warn_emoji} Статистика для выбранного периода не найдена")
         return
 
     text = format_period_stats_message(stat)
@@ -159,7 +160,7 @@ def format_period_stats_message(stat: ParkingStatsPeriodDTO) -> str:
     rel_rate = f"{stat.release_success_rate}%" if stat.release_success_rate is not None else "0%"
 
     message_text = (
-        f"📊 <b>Статистика распределения парковочных мест за период {stat.period_display}</b>\n\n"
+        f"{statistics_emoji} <b>Статистика распределения парковочных мест за период {stat.period_display}</b>\n\n"
 
         f"<b>Освобождение мест:</b>\n"
         f"┌ Всего освобождено: <b>{stat.total_releases}</b>\n"

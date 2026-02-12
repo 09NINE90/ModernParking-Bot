@@ -1,6 +1,7 @@
 from app.bot.notification.edit_message import edit_message
 from app.data import get_db_connection
 from app.services import ServiceFactory
+from app.utils.emoji_util import info_emoji
 
 
 async def expire_waiting_confirmations():
@@ -32,5 +33,5 @@ async def expire_waiting_confirmations():
             editing_message_id=message_id,
             new_message_text="Вам было предложено место на сегодня."
                              " Но время на принятие места вышло😔\n\n"
-                             "<i>ℹ️ Ваша заявка отменена.</i>"
+                             f"<i>{info_emoji} Ваша заявка отменена.</i>"
         )

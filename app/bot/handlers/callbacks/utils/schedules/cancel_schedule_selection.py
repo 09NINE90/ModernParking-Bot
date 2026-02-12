@@ -3,6 +3,7 @@ from aiogram.types import CallbackQuery
 
 from app.bot.keyboards import back_to_main_markup
 from app.scheduler.schedule_utils import cancel_schedule_distribute_weekly_parking_schedules
+from app.utils.emoji_util import info_emoji
 
 
 async def cancel_schedule_selection(callback: CallbackQuery, state: FSMContext):
@@ -12,7 +13,7 @@ async def cancel_schedule_selection(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         text="Вы <b>отклонили</b> предложение об автоматическом создании запросов "
              "на парковочные места на следующую неделю.\n\n"
-             "ℹ️ <i>Вы всё равно можете сделать запросы самостоятельно, "
-             "нажав '🚗 Запросить место' в главном меню</i>",
+             f"{info_emoji} <i>Вы всё равно можете сделать запросы самостоятельно, "
+             "нажав 'Запросить место' в главном меню</i>",
         reply_markup=back_to_main_markup
     )

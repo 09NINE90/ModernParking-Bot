@@ -9,6 +9,7 @@ from app.logs.log_builder import log, LogType
 from app.scheduler.schedule_utils import cancel_scheduled_cancellation
 from app.services import ServiceFactory
 from app.utils.daily_statistics_util import update_daily_statistics_by_date
+from app.utils.emoji_util import info_emoji, warn_emoji
 
 
 async def cancel_spot(callback: CallbackQuery):
@@ -59,9 +60,9 @@ async def cancel_spot(callback: CallbackQuery):
 
         await callback.message.edit_text(
             text=(
-                f"ℹ️ Вы успешно отказались от места №{spot_confirmation_data.spot_number} "
+                f"{info_emoji} Вы успешно отказались от места №{spot_confirmation_data.spot_number} "
                 f"на {spot_confirmation_data.assignment_date.strftime('%d.%m.%Y')}\n\n"
-                "️️⚠️ <i>Я больше не буду предлагать Вам места на эту дату</i>"
+                f"️{warn_emoji} <i>Я больше не буду предлагать Вам места на эту дату</i>"
             )
         )
 

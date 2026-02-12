@@ -12,6 +12,7 @@ from app.data import get_db_connection
 from app.logs.log_builder import log, LogType
 from app.services import ServiceFactory
 from app.utils.daily_statistics_util import update_daily_statistics_by_date
+from app.utils.emoji_util import info_emoji, warn_emoji, sber_emoji
 
 
 async def select_spot(query: CallbackQuery, state: FSMContext):
@@ -95,7 +96,7 @@ async def show_release_calendar_message(message: types.Message, state: FSMContex
         else:
             await message.answer(
                 "Выберите дату, когда освободите свое место:\n\n"
-                f"ℹ️ <i>Отображаются только те даты, на которые место <b>№{spot_number}</b> не было освобождено.</i>",
+                f"{info_emoji} <i>Отображаются только те даты, на которые место <b>№{spot_number}</b> не было освобождено.</i>",
                 reply_markup=date_list_markup(existing_dates=existing_dates, callback_prefix='release_date')
             )
             return None
@@ -153,7 +154,7 @@ async def process_spot_release(callback: CallbackQuery, date_str: str, state: FS
 
         if result:
             await callback.message.edit_text(
-                f"✅ Отлично! Вы освободили место №{spot_num} на {release_date.strftime('%d.%m.%Y')}",
+                f"{sber_emoji} Отлично! Вы освободили место №{spot_num} на {release_date.strftime('%d.%m.%Y')}",
                 reply_markup=back_to_main_markup
             )
 
@@ -169,7 +170,7 @@ async def process_spot_release(callback: CallbackQuery, date_str: str, state: FS
             return None
         else:
             await callback.message.edit_text(
-                f"⚠️ Место №{spot_num} уже освобождено на {release_date.strftime('%d.%m.%Y')}",
+                f"{warn_emoji} Место №{spot_num} уже освобождено на {release_date.strftime('%d.%m.%Y')}",
                 reply_markup=back_to_main_markup
             )
             return None

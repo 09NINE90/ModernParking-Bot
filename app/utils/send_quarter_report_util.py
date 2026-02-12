@@ -2,6 +2,7 @@ from app.config import settings
 from app.data import get_db_connection
 from app.data.models import ParkingStatsPeriodDTO
 from app.services import ServiceFactory
+from app.utils.emoji_util import statistics_emoji
 
 
 async def send_quarter_report():
@@ -32,7 +33,7 @@ def format_period_stats_message(stat: ParkingStatsPeriodDTO) -> str:
 
     message_text = (
         "Всем привет!\n\n"
-        f"📊 <b>Статистика распределения парковочных мест за период {stat.period_display}</b>\n\n"
+        f"{statistics_emoji} <b>Статистика распределения парковочных мест за период {stat.period_display}</b>\n\n"
 
         f"<b>Освобождение мест:</b>\n"
         f"┌ Всего освобождено: <b>{stat.total_releases}</b>\n"

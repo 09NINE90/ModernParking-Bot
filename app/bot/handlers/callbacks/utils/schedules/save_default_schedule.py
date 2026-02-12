@@ -6,6 +6,7 @@ from app.bot.keyboards.inline import back_to_create_default_schedule_markup
 from app.constants import sort_weekdays, get_day_numbers_for_week_days, reverse_day_offsets, weekdays_ru
 from app.data import get_db_connection
 from app.services import ServiceFactory
+from app.utils.emoji_util import sber_emoji
 
 
 async def save_default_schedule(callback: CallbackQuery, state: FSMContext):
@@ -38,7 +39,7 @@ async def save_default_schedule(callback: CallbackQuery, state: FSMContext):
 
             user_schedules = get_user_schedules(result_list)
 
-            message_text = (f"✅ Сохранил расписание на: <b>{days_text}</b>\n\n"
+            message_text = (f"{sber_emoji} Сохранил расписание на: <b>{days_text}</b>\n\n"
                             f"Ваши актуальные расписания:\n"
                             f"<b>• {user_schedules}\n\n</b>"
                             f"В воскресение ждите подтверждения расписания")

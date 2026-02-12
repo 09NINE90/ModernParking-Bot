@@ -12,6 +12,7 @@ from app.data import get_db_connection
 from app.data.models import RevokeRequest, ParkingRequestStatus, ParkingReleaseStatus
 from app.logs.log_builder import log, LogType
 from app.services import ServiceFactory
+from app.utils.emoji_util import info_emoji, warn_emoji
 
 
 async def choose_request_for_revocation(callback: CallbackQuery, state: FSMContext):
@@ -60,13 +61,13 @@ async def confirmation_revoke_request(callback: CallbackQuery, request_id):
             markup_text = 'отозвать'
             message_text = (f"Вы уверены, что хотите <b>отозвать запрос</b> "
                             f"на парковочное место на дату <u>{request.request_date.strftime('%d.%m.%Y')}</u>?\n\n"
-                            f"⚠️ <i>После этого Вы больше не будете участвовать в распределении "
+                            f"{warn_emoji} <i>После этого Вы больше не будете участвовать в распределении "
                             f"парковочных мест на эту дату</i>")
         else:
             markup_text = 'отказаться'
             message_text = (f"Вы уверены, что хотите <b>отказаться от места "
                             f"№{request.spot_id}</b> на дату <u>{request.request_date.strftime('%d.%m.%Y')}</u>?\n\n"
-                            f"⚠️ <i>После этого Вы больше не будете участвовать в распределении "
+                            f"{warn_emoji} <i>После этого Вы больше не будете участвовать в распределении "
                             f"парковочных мест на эту дату</i>")
 
         await callback.message.edit_text(
@@ -116,7 +117,7 @@ async def confirm_revoke_request(callback: CallbackQuery, request_id):
             )
             message_text = (f"Вы успешно отказались от парковочного места <b>№{request.spot_id}</b> "
                             f"на дату <u>{request.request_date.strftime('%d.%m.%Y')}</u>\n\n"
-                            f"ℹ️ <i>Это место будет предложено кому-нибудь другому</i>")
+                            f"{info_emoji} <i>Это место будет предложено кому-нибудь другому</i>")
 
             await log(
                 log_type=LogType.INFO,

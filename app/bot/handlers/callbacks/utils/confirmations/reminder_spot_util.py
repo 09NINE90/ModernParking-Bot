@@ -5,6 +5,7 @@ from app.data import get_db_connection
 from app.data.models import ParkingReleaseStatus, ParkingRequestStatus
 from app.scheduler.schedule_utils import cancel_scheduled_cancellation_by_reminder
 from app.services import ServiceFactory
+from app.utils.emoji_util import info_emoji, warn_emoji, sber_emoji
 
 
 async def take_spot_by_reminder(callback: CallbackQuery):
@@ -33,7 +34,7 @@ async def take_spot_by_reminder(callback: CallbackQuery):
         conn.commit()
 
         await callback.message.edit_text(
-            f"✅ Вы успешно подтвердили занятие места №{reminder_data.spot_id} "
+            f"{sber_emoji} Вы успешно подтвердили занятие места №{reminder_data.spot_id} "
             f"на {reminder_data.release_date.strftime('%d.%m.%Y')}",
             reply_markup=back_to_main_markup
         )
@@ -81,9 +82,9 @@ async def cancel_spot_by_reminder(callback: CallbackQuery):
         conn.commit()
 
         await callback.message.edit_text(
-            f"ℹ️ Вы успешно отказались от места №{reminder_data.spot_id} "
+            f"{info_emoji} Вы успешно отказались от места №{reminder_data.spot_id} "
             f"на {reminder_data.release_date.strftime('%d.%m.%Y')}\n\n"
-            "️️⚠️ <i>Я больше не буду предлагать Вам места на эту дату</i>",
+            f"️{warn_emoji} <i>Я больше не буду предлагать Вам места на эту дату</i>",
             reply_markup=back_to_main_markup
         )
 

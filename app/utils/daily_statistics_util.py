@@ -12,7 +12,7 @@ from app.data import get_db_connection
 from app.logs.log_builder import log, LogType
 from app.services import ServiceFactory
 from app.utils.dates_util import get_day_text
-from app.utils.emoji_util import get_random_car_emoji
+from app.utils.emoji_util import get_random_car_emoji, statistics_emoji, eyes_emoji
 
 
 async def get_daily_statistics(plus_day: int = 0):
@@ -74,8 +74,8 @@ async def get_daily_statistics_text_by_date(rq_datetime: datetime):
     day_text = get_day_text(rq_datetime.date())
 
     message_text = (
-        f"👋<b>Всем привет!</b>\n"
-        f"📊 Ситуация на {day_text} <u>{rq_datetime.date().strftime('%d.%m.%Y')}</u>:\n\n"
+        f"<b>Всем привет!</b>\n"
+        f"{statistics_emoji} Ситуация на {day_text} <u>{rq_datetime.date().strftime('%d.%m.%Y')}</u>:\n\n"
     )
     with get_db_connection() as conn:
         spot_release_service = ServiceFactory.create_spot_release_service(conn)
@@ -101,7 +101,7 @@ async def get_daily_statistics_text_by_date(rq_datetime: datetime):
                 spot = transfer.spot_id
                 message_text += f"{emoji} {owner} отдал место <b>№{spot}</b> -> {recipient}\n\n"
         else:
-            message_text += "\n👀Трансферов мест пока не было...\n"
+            message_text += f"\n{eyes_emoji}Трансферов мест пока не было...\n"
 
         message_text = (f"{message_text}\n"
                         f"<i>Актуально на {rq_datetime.strftime('%d.%m.%Y %H:%M')}</i>")

@@ -46,7 +46,11 @@ def date_list_markup(
             callback_data=f"{callback_prefix}_{current_date}"
         )
 
-    builder.button(text="🔙 Назад", callback_data=CallbackData.BACK_TO_MAIN)
+    builder.button(
+        text="Назад",
+        callback_data=CallbackData.BACK_TO_MAIN,
+        icon_custom_emoji_id="5258236805890710909"
+    )
     builder.adjust(1)
 
     return builder.as_markup()
@@ -63,7 +67,11 @@ def revoke_requests_markup(requests):
             callback_data=f"{CallbackData.CONFIRMATION_REVOKE_REQUEST_PREFIX}{request.request_id}"
         )
 
-    builder.button(text="🔙 Назад", callback_data=CallbackData.BACK_TO_MAIN)
+    builder.button(
+        text="Назад",
+        callback_data=CallbackData.BACK_TO_MAIN,
+        icon_custom_emoji_id="5258236805890710909"
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -71,12 +79,14 @@ def revoke_requests_markup(requests):
 def confirmation_revoke_requests_markup(request, markup_text):
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=f"✅ Да, {markup_text}",
-        callback_data=f"{CallbackData.CONFIRM_REVOKE_REQUEST_PREFIX}{request.request_id}"
+        text=f"Да, {markup_text}",
+        callback_data=f"{CallbackData.CONFIRM_REVOKE_REQUEST_PREFIX}{request.request_id}",
+        style="success"
     )
     builder.button(
-        text="🔙 Отмена",
-        callback_data=CallbackData.REVOKE_REQUEST
+        text="Отмена",
+        callback_data=CallbackData.REVOKE_REQUEST,
+        style="danger"
     )
 
     builder.adjust(2)
@@ -91,7 +101,11 @@ def revoke_releases_markup(releases):
             callback_data=f"{CallbackData.CONFIRMATION_REVOKE_RELEASE_PREFIX}{release.release_id}"
         )
 
-    builder.button(text="🔙 Назад", callback_data=CallbackData.BACK_TO_MAIN)
+    builder.button(
+        text="Назад",
+        callback_data=CallbackData.BACK_TO_MAIN,
+        icon_custom_emoji_id="5258236805890710909"
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -99,12 +113,14 @@ def revoke_releases_markup(releases):
 def confirmation_revoke_release_markup(release):
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=f"✅ Да, отозвать",
-        callback_data=f"{CallbackData.CONFIRM_REVOKE_RELEASE_PREFIX}{release.release_id}"
+        text=f"Да, отозвать",
+        callback_data=f"{CallbackData.CONFIRM_REVOKE_RELEASE_PREFIX}{release.release_id}",
+        style="success"
     )
     builder.button(
-        text="🔙 Отмена",
-        callback_data=CallbackData.REVOKE_RELEASE
+        text="Отмена",
+        callback_data=CallbackData.REVOKE_RELEASE,
+        style="danger"
     )
 
     builder.adjust(2)
