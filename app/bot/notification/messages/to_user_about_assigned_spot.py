@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 
 from app.bot.utils import get_user_full_mention
-from app.utils.emoji_util import warn_emoji, congratulation_emoji, date_emoji, spot_emoji
+from app.utils.emoji_util import warn_emoji, congratulation_emoji, date_emoji, spot_emoji, sber_date_emoji, \
+    sber_spot_emoji
 
 
 async def to_user_about_assigned_spot(tg_user_id: int, spot_number: int, assignment_date):
@@ -21,8 +22,8 @@ async def to_user_about_assigned_spot(tg_user_id: int, spot_number: int, assignm
     message_text = (
         f"Приветствую, {user}\n\n"
         f"{congratulation_emoji} Вам назначено парковочное место!\n\n"
-        f"{spot_emoji} <b>Место:</b> №{spot_number}\n"
-        f"{date_emoji} <b>Дата:</b> {assignment_date.strftime('%d.%m.%Y')}\n\n"
+        f"{sber_spot_emoji} <b>Место:</b> №{spot_number}\n"
+        f"{sber_date_emoji} <b>Дата:</b> {assignment_date.strftime('%d.%m.%Y')}\n\n"
         f"Поздравляем с получением места!"
         f"{info_text}"
     )

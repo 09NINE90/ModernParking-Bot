@@ -6,6 +6,7 @@ from app.bot.constants.callback_data import CallbackData
 from app.bot.handlers.callbacks.utils.feedback_utils import processing_feedback
 from app.bot.keyboards import back_to_main_markup
 from app.logs.log_builder import log
+from app.utils.emoji_util import canceled_emoji
 
 
 def setup_feedback_callbacks(router: Router) -> None:
@@ -19,7 +20,7 @@ def setup_feedback_callbacks(router: Router) -> None:
             await processing_feedback(callback, state, feedback_type)
         except Exception as e:
             await callback.message.edit_text(
-                text=f"❌ Ошибка при отправки обратной связи"
+                text=f"{canceled_emoji} Ошибка при отправки обратной связи"
                      "<i>Обратитесь к администратору.\nВызовете:/feedback </i>",
                 reply_markup=back_to_main_markup
             )

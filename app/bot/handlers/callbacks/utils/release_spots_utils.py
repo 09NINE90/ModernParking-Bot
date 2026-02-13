@@ -12,7 +12,8 @@ from app.data import get_db_connection
 from app.logs.log_builder import log, LogType
 from app.services import ServiceFactory
 from app.utils.daily_statistics_util import update_daily_statistics_by_date
-from app.utils.emoji_util import info_emoji, warn_emoji, sber_emoji
+from app.utils.emoji_util import info_emoji, warn_emoji, sber_emoji, sber_accept_emoji, canceled_emoji, sber_spot_emoji, \
+    sber_date_emoji
 
 
 async def select_spot(query: CallbackQuery, state: FSMContext):
@@ -26,7 +27,7 @@ async def select_spot(query: CallbackQuery, state: FSMContext):
             state: FSMContext для управления состоянием диалога
     """
     await query.message.edit_text(
-        "Напишите номер места, которое хотите освободить:",
+        f"{sber_spot_emoji} Напишите номер места, которое хотите освободить:",
         reply_markup=back_to_main_markup
     )
 
@@ -47,7 +48,7 @@ async def handle_spot_number(message: types.Message, state: FSMContext):
     spot_number = message.text.strip()
     if not await is_valid_spot_number(spot_number):
         await message.answer(
-            "❌ Неверный номер места. Пожалуйста, введите корректный номер:"
+            f"{canceled_emoji} Неверный номер места. Пожалуйста, введите корректный номер:"
         )
         return
 
@@ -95,7 +96,7 @@ async def show_release_calendar_message(message: types.Message, state: FSMContex
             return None
         else:
             await message.answer(
-                "Выберите дату, когда освободите свое место:\n\n"
+                f"{sber_date_emoji} Выберите дату, когда освободите свое место:\n\n"
                 f"{info_emoji} <i>Отображаются только те даты, на которые место <b>№{spot_number}</b> не было освобождено.</i>",
                 reply_markup=date_list_markup(existing_dates=existing_dates, callback_prefix='release_date')
             )
@@ -135,7 +136,7 @@ async def process_spot_release(callback: CallbackQuery, date_str: str, state: FS
 
     if not spot_number:
         await log(log_message="Не найден номер места")
-        await callback.message.edit_text("❌ Ошибка: не найден номер места")
+        await callback.message.edit_text(f"{canceled_emoji} Ошибка: не найден номер места")
         return None
 
     with get_db_connection() as conn:
@@ -154,7 +155,7 @@ async def process_spot_release(callback: CallbackQuery, date_str: str, state: FS
 
         if result:
             await callback.message.edit_text(
-                f"{sber_emoji} Отлично! Вы освободили место №{spot_num} на {release_date.strftime('%d.%m.%Y')}",
+                f"{sber_accept_emoji} Отлично! Вы освободили место №{spot_num} на {release_date.strftime('%d.%m.%Y')}",
                 reply_markup=back_to_main_markup
             )
 

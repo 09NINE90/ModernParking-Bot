@@ -6,6 +6,7 @@ from app.bot.handlers.callbacks.utils.confirmations.cancel_spot_util import canc
 from app.bot.handlers.callbacks.utils.confirmations.take_spot_util import take_spot
 from app.bot.keyboards import back_to_main_markup
 from app.logs.log_builder import log
+from app.utils.emoji_util import canceled_emoji
 
 
 def setup_found_spot_callbacks(router: Router) -> None:
@@ -18,7 +19,7 @@ def setup_found_spot_callbacks(router: Router) -> None:
             await take_spot(callback)
         except Exception as e:
             await callback.message.edit_text(
-                text=f"❌ Ошибка принятия предложенного места"
+                text=f"{canceled_emoji} Ошибка принятия предложенного места"
                      "<i>Обратитесь к администратору.\nВызовете:/feedback </i>",
                 reply_markup=back_to_main_markup
             )
@@ -35,7 +36,7 @@ def setup_found_spot_callbacks(router: Router) -> None:
             await cancel_spot(callback)
         except Exception as e:
             await callback.message.edit_text(
-                text=f"❌ Ошибка отказа от предложенного места"
+                text=f"{canceled_emoji} Ошибка отказа от предложенного места"
                      "<i>Обратитесь к администратору.\nВызовете:/feedback </i>",
                 reply_markup=back_to_main_markup
             )

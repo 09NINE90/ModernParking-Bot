@@ -10,7 +10,7 @@ from app.bot.keyboards import back_to_main_markup
 from app.bot.utils import get_user_full_mention
 from app.config import settings
 from app.logs.log_builder import log
-from app.utils.emoji_util import sber_emoji
+from app.utils.emoji_util import sber_emoji, sber_accept_emoji
 
 
 async def processing_feedback(callback: CallbackQuery, state: FSMContext, feedback_type):
@@ -81,7 +81,7 @@ async def send_feedback(message: types.Message, state: FSMContext):
 
         if sent_message:
             await message.answer(
-                text=f"{sber_emoji} Ваш отзыв успешно отправлен! Спасибо!",
+                text=f"{sber_accept_emoji} Ваш отзыв успешно отправлен! Спасибо!",
                 reply_markup=back_to_main_markup
             )
 

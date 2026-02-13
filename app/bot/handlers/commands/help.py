@@ -7,7 +7,7 @@ from app.data import get_db_connection
 from app.logs.log_builder import log, LogType
 from app.services import ServiceFactory
 from app.services.user_service import UserService
-from app.utils.emoji_util import statistics_emoji
+from app.utils.emoji_util import statistics_emoji, clock_emoji, sber_arrow_emoji, sber_black_logo_emoji
 
 
 async def help_command(message: types.Message):
@@ -42,7 +42,7 @@ async def help_command(message: types.Message):
         if registered:
             await message.answer(
                 text=(
-                    "🤖 <b>Помощь по боту-ассистенту парковки</b>\n\n"
+                    f"{sber_black_logo_emoji} <b>Помощь по боту-ассистенту парковки</b>\n\n"
 
                     "Я ваш личный ассистент парковки в офисе <b>\"Технохаба\"</b>\n"
                     "По адресу: <b>ул. Розы Люксембург 56А</b>\n\n"
@@ -55,9 +55,9 @@ async def help_command(message: types.Message):
                     "• Обратная связь\n\n"
 
                     "🛠 <b>Доступные команды:</b>\n"
-                    "▫️ /start - Запуск бота и главное меню\n"
-                    "▫️ /help - Инструкция по использованию\n"
-                    "▫️ /feedback - Отправить отзыв или предложение\n\n"
+                    f"{sber_arrow_emoji} /start - Запуск бота и главное меню\n"
+                    f"{sber_arrow_emoji} /help - Инструкция по использованию\n"
+                    f"{sber_arrow_emoji} /feedback - Отправить отзыв или предложение\n\n"
 
                     "🎮 <b>Управление ботом:</b>\n"
                     "Все действия выполняются через кнопки главного меню:\n\n"
@@ -83,7 +83,7 @@ async def help_command(message: types.Message):
                     "• <b>Отозвать место</b> - вернуть освобожденное место (если его еще никто не занял)\n"
                     "• <b>Отозвать запрос</b> - отменить запрос на место\n\n"
 
-                    "⏰ <b>Важно знать:</b>\n"
+                    f"{clock_emoji} <b>Важно знать:</b>\n"
                     "• Бронирование доступно на рабочие дни (Пн-Пт)\n"
                     "• Можно отозвать свои запросы и освобождения\n"
                     "• Всегда есть кнопка \"Назад\" для возврата\n"

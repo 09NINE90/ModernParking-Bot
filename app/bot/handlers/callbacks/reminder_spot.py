@@ -6,6 +6,7 @@ from app.bot.handlers.callbacks.utils.confirmations.reminder_spot_util import ta
     cancel_spot_by_reminder
 from app.bot.keyboards import back_to_main_markup
 from app.logs.log_builder import log
+from app.utils.emoji_util import canceled_emoji
 
 
 def setup_reminder_spot_callbacks(router: Router) -> None:
@@ -18,7 +19,7 @@ def setup_reminder_spot_callbacks(router: Router) -> None:
             await take_spot_by_reminder(callback)
         except Exception as e:
             await callback.message.edit_text(
-                text="❌ Ошибка подтверждения занятого места\n\n"
+                text=f"{canceled_emoji} Ошибка подтверждения занятого места\n\n"
                      "<i>Обратитесь к администратору.\nВызовете:/feedback </i>",
                 reply_markup=back_to_main_markup
             )
@@ -35,7 +36,7 @@ def setup_reminder_spot_callbacks(router: Router) -> None:
             await cancel_spot_by_reminder(callback)
         except Exception as e:
             await callback.message.edit_text(
-                text="❌ Ошибка отказа от занятого места\n\n"
+                text=f"{canceled_emoji} Ошибка отказа от занятого места\n\n"
                      "<i>Обратитесь к администратору.\nВызовете:/feedback </i>",
                 reply_markup=back_to_main_markup
             )

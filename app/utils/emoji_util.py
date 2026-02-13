@@ -43,6 +43,17 @@ spot_emoji = "<tg-emoji emoji-id=\"5391032818111363540\">📍</tg-emoji>"
 date_emoji = "<tg-emoji emoji-id=\"5413879192267805083\">📅</tg-emoji>"
 eyes_emoji = "<tg-emoji emoji-id=\"5210956306952758910\">👀</tg-emoji>"
 save_emoji = "<tg-emoji emoji-id=\"5462956611033117422\">💾</tg-emoji>"
+waiting_emoji = "<tg-emoji emoji-id=\"5440621591387980068\">⌛️</tg-emoji>"
+canceled_emoji = "<tg-emoji emoji-id=\"5210952531676504517\">❌</tg-emoji>"
+not_found_emoji = "<tg-emoji emoji-id=\"5458378137240877666\">🤷</tg-emoji>"
+
+sber_spot_emoji = "<tg-emoji emoji-id=\"5427335835907293424\">📍</tg-emoji>"
+sber_back_emoji = "<tg-emoji emoji-id=\"5420128322438851607\">🔙</tg-emoji>"
+sber_black_logo_emoji = "<tg-emoji emoji-id=\"5472242841428199049\">✅</tg-emoji>"
+sber_dot_emoji = "<tg-emoji emoji-id=\"5433783127279435047\">▫️</tg-emoji>"
+sber_arrow_emoji = "<tg-emoji emoji-id=\"5427343150236607668\">➡️</tg-emoji>"
+sber_accept_emoji = "<tg-emoji emoji-id=\"5426986105310313313\">✅️</tg-emoji>"
+sber_date_emoji = "<tg-emoji emoji-id=\"5427170638580185994\">📅</tg-emoji>"
 
 def get_random_car_emoji():
     return random.choice(car_emojis)

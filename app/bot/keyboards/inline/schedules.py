@@ -36,7 +36,7 @@ def create_default_schedule_markup(selected_days: list[str] = None) -> InlineKey
     builder.button(
         text="Назад",
         callback_data=CallbackData.BACK_TO_MAIN,
-        icon_custom_emoji_id="5258236805890710909"
+        icon_custom_emoji_id="5420128322438851607"
     )
     builder.adjust(1)
     return builder.as_markup()
@@ -61,7 +61,7 @@ def create_delete_schedules_keyboard(schedules: list[ScheduleDto]) -> InlineKeyb
     builder.button(
         text="Назад",
         callback_data=CallbackData.BACK_TO_MAIN,
-        icon_custom_emoji_id="5258236805890710909"
+        icon_custom_emoji_id="5420128322438851607"
     )
 
     builder.adjust(1)

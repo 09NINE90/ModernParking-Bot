@@ -6,7 +6,7 @@ from app.services import ServiceFactory
 from app.services.user_service import UserService
 from app.data.database import get_db_connection
 from app.bot.keyboards import main_markup
-from app.utils.emoji_util import sber_emoji
+from app.utils.emoji_util import sber_emoji, sber_black_logo_emoji, canceled_emoji
 
 
 async def start_command(message: types.Message):
@@ -39,13 +39,13 @@ async def start_command(message: types.Message):
 
         if registered:
             await message.answer(
-                text=(f"{sber_emoji} Бот распределения парковочных мест\n\n"
+                text=(f"{sber_black_logo_emoji} Бот распределения парковочных мест\n\n"
                       "Выберите действие:"),
                 reply_markup=main_markup
             )
         else:
             await log(log_message=f"Ошибка регистрации пользователя: {user.id}")
             await message.answer(
-                "❌ Произошла ошибка при регистрации.\n"
+                f"{canceled_emoji} Произошла ошибка при регистрации.\n"
                 "Пожалуйста, попробуйте позже."
             )

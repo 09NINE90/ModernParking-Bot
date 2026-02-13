@@ -30,7 +30,7 @@ def back_to_main_admin_markup() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(
             text="Назад",
             callback_data=CallbackData.MAIN_ADMIN,
-            icon_custom_emoji_id="5258236805890710909"
+            icon_custom_emoji_id="5420128322438851607"
         )],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
@@ -62,7 +62,7 @@ def create_stats_period_markup(period_name: str, period_displays: list[str]) -> 
     builder.button(
         text="Назад",
         callback_data=CallbackData.MAIN_ADMIN,
-        icon_custom_emoji_id="5258236805890710909"
+        icon_custom_emoji_id="5420128322438851607"
     )
     builder.adjust(1)
     return builder.as_markup()
@@ -73,7 +73,7 @@ def back_to_stats_period_markup(period_name: str) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(
             text="Назад",
             callback_data=f"{period_name}{CallbackData.POSTFIX_STATS}",
-            icon_custom_emoji_id="5258236805890710909"
+            icon_custom_emoji_id="5420128322438851607"
         )],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

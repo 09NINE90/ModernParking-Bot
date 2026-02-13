@@ -11,7 +11,7 @@ from app.logs.log_builder import log, LogType
 from app.scheduler.schedule_utils import cancel_schedule_distribute_weekly_parking_schedules
 from app.scheduler.scheduler_manager import schedule_distribute_weekly_parking_schedules
 from app.services import ServiceFactory
-from app.utils.emoji_util import sber_emoji, warn_emoji, date_emoji
+from app.utils.emoji_util import sber_emoji, warn_emoji, date_emoji, sber_date_emoji
 
 
 async def distribute_weekly_schedules():
@@ -56,7 +56,7 @@ async def send_schedule_selection(schedule_data: dict):
             keyboard = schedule_selection_markup(schedules)
 
             message_text = (
-                f"{date_emoji} <b>Расписание на {dates_range}</b>\n\n"
+                f"{sber_date_emoji} <b>Расписание на {dates_range}</b>\n\n"
                 f"До конца дня выберите дни для парковки:\n\n"
                 f"<i>Автоматически создам запросы на места</i>"
             )

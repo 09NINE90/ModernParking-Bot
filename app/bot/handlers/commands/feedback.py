@@ -6,6 +6,7 @@ from app.data import get_db_connection
 from app.logs.log_builder import log, LogType
 from app.services import ServiceFactory
 from app.services.user_service import UserService
+from app.utils.emoji_util import sber_black_logo_emoji
 
 
 async def feedback_command(message: types.Message):
@@ -36,7 +37,7 @@ async def feedback_command(message: types.Message):
 
         if registered:
             await message.answer(
-                text="🤖 <b>Обратная связь по боту-ассистенту парковки</b>",
+                text=f"{sber_black_logo_emoji} <b>Обратная связь по боту-ассистенту парковки</b>",
                 reply_markup=feedback_markup
             )
         else:

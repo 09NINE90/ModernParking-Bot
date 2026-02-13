@@ -4,7 +4,7 @@ from app.bot.keyboards import back_to_main_admin, create_stats_period_markup, ba
 from app.data import get_db_connection
 from app.data.models import ParkingStatsPeriodDTO
 from app.services import ServiceFactory
-from app.utils.emoji_util import warn_emoji, statistics_emoji
+from app.utils.emoji_util import warn_emoji, statistics_emoji, canceled_emoji
 
 
 async def for_admin_statistics(callback: CallbackQuery):
@@ -24,7 +24,7 @@ async def for_admin_statistics(callback: CallbackQuery):
         all_stats = statistics_service.get_all_statistics_by_all_time()
         if not all_stats:
             await callback.message.edit_text(
-                text="❌ Не удалось получить статистику. Попробуйте позже.",
+                text=f"{canceled_emoji} Не удалось получить статистику. Попробуйте позже.",
                 reply_markup=back_to_main_admin
             )
             return None

@@ -8,7 +8,8 @@ from app.bot.utils import get_user_full_mention
 from app.config import settings
 from app.data import get_db_connection
 from app.services import ServiceFactory
-from app.utils.emoji_util import get_random_car_emoji, statistics_emoji, eyes_emoji
+from app.utils.emoji_util import get_random_car_emoji, statistics_emoji, eyes_emoji, sber_arrow_emoji, \
+    sber_accept_emoji, canceled_emoji, not_found_emoji
 
 
 async def get_weekly_statistics():
@@ -65,11 +66,11 @@ def get_start_message_text(start_date: date, end_date: date, statistics_data):
         f"<b>Всем привет!</b>\n"
         f"{statistics_emoji} <b>Статистика за текущую неделю</b> "
         f"<u>{start_date.strftime('%d.%m.%Y')}-{end_date.strftime('%d.%m.%Y')}</u>:\n\n"
-        f"▫️Всего освобождено мест: <b>{statistics_data['total_releases']}</b>\n"
-        f"▫️Всего запросов на места: <b>{statistics_data['total_requests']}</b>\n\n"
-        f"✅ Реализовано мест всего: <b>{statistics_data['accepted_releases_count']}</b>\n"
-        f"🤷‍♂️ Не найдено мест по запросу: <b>{statistics_data['not_found_requests_count']}</b>\n"
-        f"❌ Отозвано запросов на места: <b>{statistics_data['canceled_requests_count']}</b>\n"
+        f"{sber_arrow_emoji} Всего освобождено мест: <b>{statistics_data['total_releases']}</b>\n"
+        f"{sber_arrow_emoji} Всего запросов на места: <b>{statistics_data['total_requests']}</b>\n\n"
+        f"{sber_accept_emoji} Реализовано мест всего: <b>{statistics_data['accepted_releases_count']}</b>\n"
+        f"{not_found_emoji}️ Не найдено мест по запросу: <b>{statistics_data['not_found_requests_count']}</b>\n"
+        f"{canceled_emoji} Отозвано запросов на места: <b>{statistics_data['canceled_requests_count']}</b>\n"
     )
 
     return message_text

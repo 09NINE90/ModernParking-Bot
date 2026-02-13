@@ -6,6 +6,7 @@ from app.bot.keyboards.inline.base import return_to_main_markup
 from app.config import settings
 from app.data import get_db_connection
 from app.services import ServiceFactory
+from app.utils.emoji_util import sber_arrow_emoji, statistics_emoji, sber_spot_emoji, sber_date_emoji
 
 
 async def get_my_statistics(callback: CallbackQuery):
@@ -52,17 +53,17 @@ async def get_my_statistics(callback: CallbackQuery):
 
 def get_start_message_text(request_statistics, release_statistics):
     return (
-        f"<b>Ваша статистика за всё время:</b>\n\n"
+        f"{statistics_emoji} <b>Ваша статистика за всё время:</b>\n\n"
         f"<b>Запросы мест:</b>\n"
-        f"┌ 🧮 Всего запросов: <b>{request_statistics['total_user_requests']}</b>\n"
-        f"├ ✅ Успешные бронирования: <b>{request_statistics['accepted_spots_count']}</b>\n"
-        f"├ 🤷 Не нашлось мест по запросу: <b>{request_statistics['not_found_spots_count']}</b>\n"
-        f"└ ❌ Отменённые запросы: <b>{request_statistics['canceled_spots_count']}</b>\n\n"
+        f"{sber_arrow_emoji} Всего запросов: <b>{request_statistics['total_user_requests']}</b>\n"
+        f"{sber_arrow_emoji} Успешные бронирования: <b>{request_statistics['accepted_spots_count']}</b>\n"
+        f"{sber_arrow_emoji} Не нашлось мест по запросу: <b>{request_statistics['not_found_spots_count']}</b>\n"
+        f"{sber_arrow_emoji} Отменённые запросы: <b>{request_statistics['canceled_spots_count']}</b>\n\n"
         f"<b>Освобождение мест:</b>\n"
-        f"┌ 🧮 Всего освобождено мест: <b>{release_statistics['total_user_releases']}</b>\n"
-        f"├ ✅ Мест приняли: <b>{release_statistics['accepted_releases_count']}</b>\n"
-        f"├ 🤷 Никто не взял: <b>{release_statistics['not_found_releases_count']}</b>\n"
-        f"└ ❌ Отозвано мест: <b>{release_statistics['canceled_releases_count']}</b>\n\n"
+        f"{sber_arrow_emoji} Всего освобождено мест: <b>{release_statistics['total_user_releases']}</b>\n"
+        f"{sber_arrow_emoji} Мест приняли: <b>{release_statistics['accepted_releases_count']}</b>\n"
+        f"{sber_arrow_emoji} Никто не взял: <b>{release_statistics['not_found_releases_count']}</b>\n"
+        f"{sber_arrow_emoji} Отозвано мест: <b>{release_statistics['canceled_releases_count']}</b>\n\n"
     )
 
 
@@ -74,7 +75,7 @@ def update_message_text_by_request(message_text, current_spots_requests):
             if current_spot.spot_id:
                 spot_info = f" <b>№{current_spot.spot_id}</b>"
             emoji_status = current_spot.status.emoji
-            message_text += (f"📅 Дата: {current_spot.request_date.strftime('%d.%m.%Y')}\n"
+            message_text += (f"{sber_date_emoji} Дата: {current_spot.request_date.strftime('%d.%m.%Y')}\n"
                              f"{emoji_status} Статус: {current_spot.status.display_name}{spot_info}\n\n")
     else:
         message_text += "\nУ Вас пока что нет актуальных запросов на парковочные места\n"
@@ -87,8 +88,8 @@ def update_message_text_by_releases(message_text, current_spots_releases):
         message_text += "\n<b>Ваши актуальные освобожденные парковочные места:</b>\n"
         for current_spot in current_spots_releases:
             emoji_status = current_spot.status.emoji
-            message_text += (f"📅 Дата: {current_spot.release_date.strftime('%d.%m.%Y')}\n"
-                             f"📍 Место: №{current_spot.spot_id}\n"
+            message_text += (f"{sber_date_emoji} Дата: {current_spot.release_date.strftime('%d.%m.%Y')}\n"
+                             f"{sber_spot_emoji} Место: №{current_spot.spot_id}\n"
                              f"{emoji_status} Статус: {current_spot.status.display_name}\n\n")
     else:
         message_text += "\nУ Вас пока что нет актуальных освобожденных парковочных мест\n"

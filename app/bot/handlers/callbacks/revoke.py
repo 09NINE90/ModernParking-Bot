@@ -10,6 +10,7 @@ from app.bot.handlers.callbacks.utils.revoke.revoke_request_util import choose_r
 from app.bot.keyboards import back_to_main_markup
 from app.bot.keyboards.inline import back_to_revoke_release_markup, back_to_revoke_request_markup
 from app.logs.log_builder import log
+from app.utils.emoji_util import canceled_emoji
 
 
 def setup_revoke_callbacks(router: Router) -> None:
@@ -27,7 +28,7 @@ def setup_revoke_callbacks(router: Router) -> None:
             await choose_request_for_revocation(callback, state)
         except Exception as e:
             await callback.message.edit_text(
-                text=f"❌ Ошибка при выборе запроса на отзыв"
+                text=f"{canceled_emoji} Ошибка при выборе запроса на отзыв"
                      "<i>Обратитесь к администратору.\nВызовете:/feedback </i>",
                 reply_markup=back_to_main_markup
             )

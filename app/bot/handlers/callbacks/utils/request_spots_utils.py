@@ -7,7 +7,7 @@ from app.bot.handlers.callbacks.utils.distribution_spots_util import distribute_
 from app.data import get_db_connection
 from app.bot.keyboards import back_to_main_markup, date_list_markup
 from app.services.factory import ServiceFactory
-from app.utils.emoji_util import info_emoji, warn_emoji, sber_emoji
+from app.utils.emoji_util import info_emoji, warn_emoji, sber_emoji, sber_accept_emoji, sber_date_emoji
 
 
 async def show_request_calendar(callback: CallbackQuery, state: FSMContext):
@@ -45,7 +45,7 @@ async def show_request_calendar(callback: CallbackQuery, state: FSMContext):
             )
         else:
             await callback.message.edit_text(
-                "Выберите дату, на которую хотите запросить место:\n\n"
+                f"{sber_date_emoji} Выберите дату, на которую хотите запросить место:\n\n"
                 f"{info_emoji} <i>Отображаются только те даты, на которые Вы еще не делали запрос.</i>",
                 reply_markup=date_list_markup(existing_dates=existing_dates, callback_prefix='request_date')
             )
@@ -101,7 +101,7 @@ async def process_spot_request(callback: CallbackQuery, state: FSMContext, date_
 
         if result:
             await callback.message.edit_text(
-                f"{sber_emoji} Отлично! Вы заняли место в очереди на парковочное место на {request_date.strftime('%d.%m.%Y')}",
+                f"{sber_accept_emoji} Отлично! Вы заняли место в очереди на парковочное место на {request_date.strftime('%d.%m.%Y')}",
                 reply_markup=back_to_main_markup
             )
             await distribute_parking_spots()

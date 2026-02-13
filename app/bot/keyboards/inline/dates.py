@@ -49,7 +49,7 @@ def date_list_markup(
     builder.button(
         text="Назад",
         callback_data=CallbackData.BACK_TO_MAIN,
-        icon_custom_emoji_id="5258236805890710909"
+        icon_custom_emoji_id="5420128322438851607"
     )
     builder.adjust(1)
 
@@ -70,7 +70,7 @@ def revoke_requests_markup(requests):
     builder.button(
         text="Назад",
         callback_data=CallbackData.BACK_TO_MAIN,
-        icon_custom_emoji_id="5258236805890710909"
+        icon_custom_emoji_id="5420128322438851607"
     )
     builder.adjust(1)
     return builder.as_markup()
@@ -104,7 +104,7 @@ def revoke_releases_markup(releases):
     builder.button(
         text="Назад",
         callback_data=CallbackData.BACK_TO_MAIN,
-        icon_custom_emoji_id="5258236805890710909"
+        icon_custom_emoji_id="5420128322438851607"
     )
     builder.adjust(1)
     return builder.as_markup()
